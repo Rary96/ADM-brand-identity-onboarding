@@ -3,10 +3,13 @@
 Modulo di onboarding clienti stile Typeform (una domanda per schermata, transizioni
 fluide, barra di progresso) per la raccolta del brief di Brand Identity/Logo Design.
 
-**Stato**: Step 3/3 (API e integrazioni) completo, funzionante e testato
-end-to-end. Resta solo il deploy su Vercel. Dettaglio completo delle decisioni,
-delle deviazioni dal piano originale e del perché in [`doc/PROGRESS.md`](doc/PROGRESS.md)
-e in [`CLAUDE.md`](CLAUDE.md) (sezione "Cosa è già stato deciso").
+**Stato**: 🎉 Progetto completo e in produzione:
+[adm-brand-identity-onboarding.vercel.app](https://adm-brand-identity-onboarding.vercel.app)
+(Vercel, piano Hobby). Testato end-to-end anche in produzione con una
+submission reale. Push su `main` → redeploy automatico. Dettaglio completo
+delle decisioni, delle deviazioni dal piano originale e del perché in
+[`doc/PROGRESS.md`](doc/PROGRESS.md) e in [`CLAUDE.md`](CLAUDE.md) (sezione
+"Cosa è già stato deciso").
 
 ## Decisioni prese
 

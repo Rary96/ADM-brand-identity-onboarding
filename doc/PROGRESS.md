@@ -28,6 +28,35 @@ richiesta per gli aggiornamenti futuri. **CookieYes non è stato integrato**
 **Non in scope**: CookieYes/banner cookie — deciso di non integrarlo per questo
 progetto (vedi Log 2026-07-23).
 
+## Limiti noti (strumenti scelti gratuiti / per carico leggero)
+
+Ogni scelta qui sotto è stata fatta consapevolmente per un progetto a basso
+volume (un form di onboarding, non un prodotto ad alto traffico). Se il
+contesto cambia, questi sono i punti da rivalutare per primi:
+
+- **Vercel piano Hobby (gratuito)**: i ToS di Vercel lo riservano a uso non
+  commerciale — se il questionario diventasse uno strumento a pagamento o
+  con volumi alti andrebbe rivalutato l'upgrade a Pro (nessuna riconfigurazione
+  necessaria, solo un cambio di piano). Limiti tecnici del piano: bandwidth
+  mensile e durata massima delle funzioni serverless inferiori al piano Pro —
+  non un problema al volume attuale.
+- **Nodemailer + Gmail SMTP con App Password (non Resend)**: tetto non
+  ufficiale di ~500 email/giorno per account Gmail gratuiti, ben oltre il
+  volume di questo form. Nessuna dashboard di deliverability/bounce come un
+  servizio email transazionale dedicato. **Da rivalutare (torna Resend)** se
+  il volume di invii dovesse crescere molto.
+- **Niente Google Drive per gli upload**: il tetto di 2 file/2MB totali per
+  submission non è solo una scelta di semplicità ma anche un vincolo tecnico
+  reale — il body di una funzione serverless è limitato a ~4.5MB. Per file
+  più grandi o numerosi il cliente deve usare un link esterno (Drive/
+  WeTransfer/ecc.), non un vero upload.
+- **Google Sheets come "database"**: adatto al volume di un form di
+  onboarding (poche submission), non pensato per query/filtri complessi né
+  per scritture concorrenti ad alto volume.
+- **Nessun salvataggio progressi tra sessioni (niente DB)**: se il cliente
+  chiude il browser a metà compilazione, perde le risposte date fino a quel
+  punto — conseguenza diretta della scelta di non usare un database.
+
 ---
 
 ## Contesto del progetto
