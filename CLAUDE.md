@@ -62,6 +62,19 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
 - **Tempo stimato di compilazione**: 10-15 minuti, indicato in apertura e ripetuto a
   metà form come rinforzo (vedi `content/questionnaire.ts`: `introCopy`,
   `midFormReminder`).
+- **shadcn/ui: versione classica (Radix + Tailwind v3), non l'ultima major**. La CLI
+  `shadcn@latest` (v4, preset "base-nova") genera componenti su Base UI +
+  Tailwind v4 (CSS-first, niente `tailwind.config.ts`), incompatibile con
+  `tailwind.config.ts`/`design-tokens.ts` già decisi. Usato `shadcn@2.3.0`
+  (Radix + `tailwind.config.ts` classico) — non fare l'upgrade senza discuterne,
+  richiederebbe riscrivere la palette in CSS vars/oklch.
+- **Campi array liberi senza opzioni predefinite** (`valori`, `canaliVendita`,
+  `supportiEVincoli.supporti`, `formatiRichiesti`): lo schema li tipizza come
+  `z.array(z.string())` senza enum, quindi in UI sono chip-input a testo libero
+  (`ChipsField`), non checkbox con lista fissa — coerente con lo schema, non
+  inventare una tassonomia di opzioni senza chiederlo.
+- **Upload file, stato attuale**: solo link incollato (Drive/Pinterest/Instagram/sito),
+  non ancora vero upload da filesystem — vedi checklist "Cosa manca" sotto.
 
 ## Struttura file già creata
 
@@ -69,22 +82,72 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
 onboarding-brand-identity/
 ├── package.json
 ├── tailwind.config.ts
+├── components.json          # config shadcn/ui (style "default", Radix, non Base UI/v4)
+├── app/
+│   ├── layout.tsx            # font Inter, metadata
+│   ├── page.tsx                # monta <QuestionnaireWizard />
+│   └── globals.css              # tema shadcn (HSL vars) sopra palette lilla/neutri
+├── components/
+│   ├── ui/                      # primitive shadcn/ui (Radix + cva): button, input,
+│   │                             # textarea, progress, radio-group, checkbox, slider, card
+│   └── questionnaire/
+│       ├── QuestionnaireWizard.tsx   # state machine: intro → domande → consenso → outro
+│       ├── QuestionCard.tsx           # layout singola domanda + validazione + nav
+│       ├── FieldRenderer.tsx           # smista ogni domanda al componente campo giusto
+│       ├── ProgressBar.tsx / IntroScreen.tsx / OutroScreen.tsx / ConsentStep.tsx
+│       └── fields/                      # ChipsField, PillMultiSelectField, PriceScaleField,
+│                                          # ToneScaleField, GridPositionField, UploadLinkField,
+│                                          # ColorField, SupportsField, DeadlineField, SimpleFields
 ├── lib/
-│   ├── schema.ts          # Zod schema + tipi TypeScript, branching, validazioni
-│   └── design-tokens.ts   # Palette colori, font, radii, timing animazioni
+│   ├── schema.ts              # Zod schema + tipi TypeScript, branching, validazioni
+│   ├── design-tokens.ts       # Palette colori, font, radii, timing animazioni
+│   ├── questionnaire-steps.ts  # flatten domande sezioni + filtro branching nuovo/restyling
+│   └── validate-step.ts         # validazione "leggera" per step (solo obbligatorietà)
 ├── content/
-│   └── questionnaire.ts   # Copy IT: sezioni, domande, guida cliente, placeholder
+│   └── questionnaire.ts       # Copy IT: sezioni, domande, guida cliente, placeholder
 ```
 
-Da creare nei prossimi step (in quest'ordine):
+Repo GitHub collegato: `Rary96/ADM-brand-identity-onboarding` (branch `main`).
 
-1. `app/` — pagine Next.js (form multi-step, pagina di ringraziamento)
-2. `components/` — componenti UI (question renderer per ogni `FieldType`, progress
-   bar, navigazione step con Framer Motion, integrazione shadcn/ui)
-3. `emails/` — template React Email (notifica interna + conferma cliente)
-4. `app/api/submit/route.ts` — validazione Zod server-side, scrittura su Google
-   Sheets, upload su Google Drive, invio email via Resend
-5. Setup CookieYes (script nel layout, banner cookie)
+**Step 1/3 (dati) e Step 2/3 (UI/UX) completati.** L'invio del form al momento è uno
+STUB: `QuestionnaireWizard.handleSubmit` valida con `questionarioSchema` e fa solo
+`console.log(result.data)` — nessuna scrittura reale su Sheets/Drive, nessuna email.
+
+## Cosa manca per far funzionare davvero l'invio (Step 3/3 — API)
+
+In ordine consigliato:
+
+1. **Setup Google Cloud** (lato utente, non codice): creare/riusare un progetto GCP,
+   abilitare Google Sheets API + Google Drive API, creare un Service Account e
+   generarne la chiave JSON.
+2. **Google Sheet di destinazione**: crearlo, condividerlo (ruolo Editor) con l'email
+   del Service Account, recuperare lo Sheet ID.
+3. **Cartella Google Drive di destinazione** per gli allegati: crearla, condividerla
+   con lo stesso Service Account, recuperare il Folder ID.
+4. **Account Resend**: dominio mittente verificato + API key; decidere l'indirizzo
+   `RESEND_FROM_EMAIL`.
+5. **`app/api/submit/route.ts`**: ri-validare il payload con `questionarioSchema`
+   lato server (mai fidarsi solo del client), scrivere la riga su Google Sheets,
+   caricare gli allegati su Drive, inviare le due email via Resend, rispondere
+   con esito ok/errore.
+6. **`emails/`**: due template React Email — riepilogo interno (a
+   `dalmontearianna.96@gmail.com`) e conferma/ringraziamento al cliente (indirizzo
+   preso dal campo `email` del form).
+7. **Collegare il frontend**: `QuestionnaireWizard.handleSubmit` deve chiamare
+   `fetch("/api/submit", ...)` al posto del `console.log` attuale, e gestire davvero
+   gli errori di rete/server (oggi mostra solo errori di validazione locale).
+8. **Upload file reale** (gap noto): oggi i campi `loghiRiferimento`,
+   `stiliDaEvitare`, `assetEsistenti` accettano SOLO link incollati
+   (`UploadLinkField`), non ancora un vero upload da file system. Va aggiunta una UI
+   drag-and-drop/file-picker che mandi i file al server prima che possano finire su
+   Drive — il link resta comunque come alternativa, come da decisione originale.
+9. **Pagina informativa privacy**: intro e step di consenso citano già
+   "l'informativa privacy" ma non esiste ancora una pagina/link reale — necessaria
+   prima di raccogliere dati veri (GDPR).
+10. **CookieYes**: script nel layout + banner cookie, variabile
+    `NEXT_PUBLIC_COOKIEYES_ID`.
+11. **Variabili d'ambiente su Vercel** (vedi sezione sotto) + deploy + test end-to-end
+    in produzione con un invio reale.
 
 ## Variabili d'ambiente richieste (da configurare su Vercel, non nel codice)
 
