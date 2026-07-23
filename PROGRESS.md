@@ -8,13 +8,12 @@ voci passate. Lo stato in cima ("Stato attuale") va invece tenuto aggiornato.
 
 ## Stato attuale
 
-**Fase**: 2/4 completata — UI/UX multi-step funzionante (submit ancora uno STUB:
-valida con Zod e fa `console.log`, nessuna scrittura reale su Sheets/Drive/email).
-**Prossimo step**: API e integrazioni (Step 3) — piano tecnico dettagliato pronto
-(vedi Log 2026-07-23 sotto), non ancora implementato. Ordine concordato con
-l'utente: **Sheets → Email → Upload file → Privacy/Cookie → Deploy**, con setup
-degli account esterni (Google Cloud, Resend, CookieYes, Vercel) guidato passo-passo
-fase per fase, non tutto insieme.
+**Fase**: 3/4 in corso — **Google Sheets funzionante**: submit reale scrive una riga
+su Google Sheets (validazione Zod server-side, `app/api/submit/route.ts`), testato
+end-to-end sia via chiamata diretta all'API sia via browser reale. Restano da fare,
+nell'ordine concordato: Email (Resend) → Upload file reale (Drive) → Privacy/Cookie
+→ Deploy. Setup dei prossimi account esterni (Resend, poi Drive, CookieYes, Vercel)
+guidato passo-passo fase per fase, non tutto insieme.
 
 | Fase | Cosa include | Stato |
 |---|---|---|
@@ -216,3 +215,34 @@ integrazioni), nessun codice scritto in questa sessione. Decisioni chiave del pi
 Piano tecnico completo (mapping colonne Sheets campo-per-campo, pseudocodice delle
 route API, struttura file `emails/`) salvato anche come plan file Claude Code
 locale — se non più disponibile, questo log è sufficiente per ricostruirlo.
+
+**2026-07-23 — Claude Code** — Implementata la Fase 1 del piano: integrazione
+Google Sheets reale, prima parte funzionante dello Step 3/4.
+
+- Guidato l'utente passo-passo nella creazione di progetto GCP, abilitazione Google
+  Sheets API, Service Account + chiave JSON, foglio Google Sheet (tab `Risposte`,
+  50 colonne di header) condiviso col Service Account. Credenziali ricevute in
+  chat e scritte solo in `.env.local` (gitignored), mai stampate altrove né
+  committate.
+- Nuovo `lib/questionnaire-labels.ts`: helper condiviso che traduce i valori enum
+  (es. `tipoProgetto`, `archetipo`, `budget`) nelle label italiane già definite in
+  `content/questionnaire.ts` — stessa fonte di verità della UI, riusabile anche
+  per i template email della prossima fase.
+- Nuovo `lib/google-sheets.ts`: `appendSubmissionRow` — costruisce la riga di 50
+  colonne (una per sotto-campo degli oggetti annidati, array con `join(", ")`,
+  ultima colonna JSON completo come rete di sicurezza) e fa `values.append` sul
+  tab `Risposte`.
+- Nuovo `app/api/submit/route.ts`: valida con `questionarioSchema` server-side,
+  scrive su Sheets, 400 se dati invalidi, 500 con messaggio se Sheets fallisce,
+  200 `{ok:true}` se ok.
+- `QuestionnaireWizard.tsx`: `submissionId` generato una volta al mount,
+  `handleSubmit` ora è una vera `fetch("/api/submit", ...)` con gestione errori
+  reale (le risposte non vengono perse se l'invio fallisce, l'utente può
+  ripremere "Invia").
+- Verificato end-to-end due volte: chiamata diretta all'API (curl) e flusso
+  completo in browser reale (Playwright headless) — in entrambi i casi la riga è
+  arrivata su Sheets nelle colonne giuste, poi rimossa perché erano solo dati di
+  test.
+
+Non ancora fatto: email (Resend), upload file reale su Drive, pagina privacy,
+CookieYes, deploy — vedi piano per l'ordine.

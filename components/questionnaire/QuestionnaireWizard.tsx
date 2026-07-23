@@ -26,6 +26,7 @@ export function QuestionnaireWizard() {
   const [reminder, setReminder] = useState(false);
   const hasShownReminder = useRef(false);
   const reminderTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const [submissionId] = useState(() => crypto.randomUUID());
 
   const tipoProgetto = answers.tipoProgetto as Questionario["tipoProgetto"] | undefined;
   const steps = useMemo(() => buildSteps(tipoProgetto), [tipoProgetto]);
@@ -93,7 +94,7 @@ export function QuestionnaireWizard() {
     }
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!consent) {
       setError("Devi accettare l'informativa privacy per continuare");
       return;
@@ -114,12 +115,23 @@ export function QuestionnaireWizard() {
     }
 
     setSubmitting(true);
-    // L'invio a Google Sheets / Resend arriva nello step API successivo (vedi README).
-    console.log("Questionario completato:", result.data);
-    setTimeout(() => {
-      setSubmitting(false);
+    setError(null);
+    try {
+      const response = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data: result.data,
+          meta: { submissionId, submittedAt: new Date().toISOString() },
+        }),
+      });
+      if (!response.ok) throw new Error("submit failed");
       setPhase("outro");
-    }, 600);
+    } catch {
+      setError("Non siamo riusciti a inviare le risposte. Riprova.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
