@@ -22,7 +22,6 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
     crescere molto, Resend torna la scelta più adatta — da rivalutare allora.
     Niente Google Drive: scartato a favore di allegati email + link (vedi
     decisione "Upload file" sotto).
-  - CookieYes — banner cookie/consenso
   - Zod — validazione dati, sia client-side che server-side
 
 ## Regole di ingaggio
@@ -95,6 +94,21 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   come prop attraverso `QuestionCard`/`FieldRenderer` — quei due restano
   dispatcher generici che non devono sapere nulla di allegati. Solo
   `UploadLinkField` consuma il context via `useFieldAttachments(fieldId)`.
+- **Cookie banner (CookieYes)**: NON integrato in questo progetto — deciso
+  dall'utente il 2026-07-23 ("non serve integrarli, almeno al momento"). Il
+  form non usa cookie non tecnici/di profilazione, quindi non è bloccante per
+  il deploy. Se in futuro dovesse servire (es. aggiunta di analytics/tracking),
+  vedi la traccia di come si sarebbe dovuto fare in `PROGRESS.md` (Log
+  2026-07-23) — non reintrodurlo senza che l'utente lo richieda esplicitamente.
+- **Pagina privacy** (`app/informativa-privacy/page.tsx`): titolare del
+  trattamento Arianna Dal Monte (freelance, dati reali — P.IVA, sede, C.F. —
+  nella pagina stessa), adattata da un template fornito dall'utente per un
+  altro cliente, generalizzata e ridotta a quello che il form fa davvero
+  (nessuna finalità di marketing/profilazione, nessun terzo oltre
+  Google/Gmail come sub-responsabili tecnici, nessun cookie non tecnico).
+  Linkata da `IntroScreen.tsx` e `ConsentStep.tsx` con `target="_blank"`
+  (mai in-tab: il form non salva progressi tra sessioni, vedi decisione sopra
+  — una navigazione in-tab perderebbe le risposte già inserite).
 
 ## Struttura file già creata
 
@@ -132,6 +146,8 @@ onboarding-brand-identity/
 ├── emails/                     # template React Email (riepilogo interno, conferma cliente)
 ├── content/
 │   └── questionnaire.ts       # Copy IT: sezioni, domande, guida cliente, placeholder
+├── app/informativa-privacy/
+│   └── page.tsx                # Pagina privacy policy (dati reali titolare, adattata da template)
 ```
 
 Repo GitHub collegato: `Rary96/ADM-brand-identity-onboarding` (branch `main`).
@@ -146,16 +162,13 @@ vero `FormData` a `/api/submit`, non più JSON con `console.log`.
 ## Cosa manca ancora per completare l'invio (Step 3/3 — API)
 
 Fatto: Google Sheets, email (riepilogo interno + conferma cliente), upload
-(allegati email + link, niente Drive). Ordine consigliato per il resto:
+(allegati email + link, niente Drive), pagina privacy policy. Resta:
 
-1. **Pagina informativa privacy**: intro e step di consenso citano già
-   "l'informativa privacy" ma non esiste ancora una pagina/link reale — necessaria
-   prima di raccogliere dati veri (GDPR). L'utente ha un testo esistente sul sito
-   principale ADM da adattare.
-2. **CookieYes**: script nel layout + banner cookie, variabile
-   `NEXT_PUBLIC_COOKIEYES_ID`.
-3. **Deploy su Vercel**: collegare il repo, impostare le env var (vedi sotto),
+1. **Deploy su Vercel**: collegare il repo, impostare le env var (vedi sotto),
    test end-to-end in produzione con un invio reale.
+
+Non in scope (deciso, non ridiscutere senza motivo): banner cookie/CookieYes —
+vedi voce dedicata sopra in "Cosa è già stato deciso".
 
 ## Variabili d'ambiente richieste (da configurare su Vercel, non nel codice)
 
@@ -165,7 +178,6 @@ GOOGLE_PRIVATE_KEY=                # fatto, in .env.local
 GOOGLE_SHEET_ID=                   # fatto, in .env.local
 GMAIL_USER=                        # fatto, in .env.local (dalmontearianna.96@gmail.com)
 GMAIL_APP_PASSWORD=                # fatto, in .env.local
-NEXT_PUBLIC_COOKIEYES_ID=          # da fare (Fase privacy/cookie)
 ```
 
 Questi valori li genera/recupera l'utente (login Google Cloud Console, Google

@@ -8,22 +8,28 @@ voci passate. Lo stato in cima ("Stato attuale") va invece tenuto aggiornato.
 
 ## Stato attuale
 
-**Fase**: 3/4 quasi completa — **Google Sheets, Email e Upload funzionanti**:
-ogni submission reale scrive una riga su Google Sheets, invia due email
-(riepilogo interno + conferma cliente) via Nodemailer/Gmail SMTP (non Resend),
-e i campi upload accettano allegati diretti (max 2 in totale, 2MB ciascuno,
-solo sull'email interna) oltre al link incollato — **niente Google Drive**,
-deciso e poi cambiato in corso d'opera (vedi Log). Testato end-to-end via
-browser reale, inclusi due bug trovati e corretti durante il test. Restano da
-fare, nell'ordine concordato: Privacy/Cookie → Deploy. Setup dei prossimi
-account/servizi (CookieYes, Vercel) guidato passo-passo fase per fase.
+**Fase**: 3/4 completa, 4/4 (Privacy) completa — **Google Sheets, Email, Upload
+e pagina privacy funzionanti**: ogni submission reale scrive una riga su
+Google Sheets, invia due email (riepilogo interno + conferma cliente) via
+Nodemailer/Gmail SMTP (non Resend), e i campi upload accettano allegati
+diretti (max 2 in totale, 2MB ciascuno, solo sull'email interna) oltre al
+link incollato — **niente Google Drive**, deciso e poi cambiato in corso
+d'opera (vedi Log). Testato end-to-end via browser reale, inclusi due bug
+trovati e corretti durante il test. **CookieYes non verrà integrato in questo
+progetto** (deciso dall'utente, vedi Log) — il form non usa cookie non
+tecnici. `/informativa-privacy` è online e linkata da intro e step di
+consenso (vedi Log). Resta solo: **Deploy su Vercel**, guidato passo-passo.
 
 | Fase | Cosa include | Stato |
 |---|---|---|
 | 1. Struttura file e schemi dati | `package.json`, `tailwind.config.ts`, `lib/schema.ts`, `lib/design-tokens.ts`, `content/questionnaire.ts` | ✅ Fatto (Cowork) |
 | 2. UI/UX | `app/`, `components/` — form una domanda per volta, progress bar, keyboard nav | ✅ Fatto (Claude Code) |
-| 3. API e integrazioni | `app/api/submit/route.ts`, Google Sheets ✅, email ✅, upload (allegati+link, niente Drive) ✅ | 🟡 In corso (privacy/cookie/deploy) |
-| 4. Setup account esterni | Vercel, Resend, Google Cloud Service Account, CookieYes (azioni manuali dell'utente, non di Claude Code) | ⬜ Da fare |
+| 3. API e integrazioni | `app/api/submit/route.ts`, Google Sheets ✅, email ✅, upload (allegati+link, niente Drive) ✅ | ✅ Fatto |
+| 4. Privacy | `app/informativa-privacy/page.tsx`, link da intro/consenso | ✅ Fatto |
+| 5. Setup account esterni | Vercel (azione manuale dell'utente, non di Claude Code) | ⬜ Da fare |
+
+**Non in scope**: CookieYes/banner cookie — deciso di non integrarlo per questo
+progetto (vedi Log 2026-07-23).
 
 ---
 
@@ -348,3 +354,72 @@ vedi piano per l'ordine.
   dell'integrazione upload.
 
 Non ancora fatto: pagina privacy, CookieYes, deploy — vedi piano per l'ordine.
+
+**2026-07-23 — Claude Code** — Decisione: niente CookieYes per questo progetto.
+
+- L'utente ha valutato che al momento non serve integrare un banner
+  cookie/CookieYes per questo form: nessun cookie non tecnico o di
+  profilazione in uso (nessun analytics/tracking di terze parti configurato).
+- Richiesta esplicita: **tenere traccia di come si dovrebbe fare**, per
+  riprendere in futuro se dovesse servire (es. se si aggiungesse analytics),
+  ma **non sviluppare l'integrazione ora**.
+- Come si sarebbe fatto (per riferimento futuro, dal piano originale Fase 4):
+  creare un account CookieYes, recuperare l'ID sito, aggiungere lo script
+  CookieYes in `app/layout.tsx` (nel `<head>`, prima di qualsiasi altro
+  script/tag di terze parti) tramite `NEXT_PUBLIC_COOKIEYES_ID`, e verificare
+  che il banner compaia al primo caricamento.
+- Rimosso ogni riferimento attivo a CookieYes da `CLAUDE.md` (stack tecnico,
+  checklist "cosa manca", env var richieste), spostato in una voce dedicata
+  di "Cosa è già stato deciso" così da non essere riproposto senza che
+  l'utente lo richieda esplicitamente.
+- La Fase 4 del piano si riduce quindi alla sola pagina privacy; la Fase 5
+  (deploy) resta invariata, semplicemente senza `NEXT_PUBLIC_COOKIEYES_ID` tra
+  le env var da impostare su Vercel.
+
+**2026-07-23 — Claude Code** — Implementata la Fase 4 del piano: pagina privacy.
+
+- L'utente ha fornito come esempio la privacy policy di un altro proprio
+  cliente (agenzia viaggi, con partner terzo per pagamenti/prenotazioni,
+  profilazione/marketing, CookieYes) da adattare e generalizzare mantenendo
+  la stessa struttura di paragrafi, riducendola a quello che questo form fa
+  davvero.
+- Dati reali del titolare forniti dall'utente in chat (P.IVA, C.F., sede,
+  email di contatto `dalmontearianna.96@gmail.com`, nessuna PEC) — non
+  inventati, scritti direttamente nella pagina (non sono secret, sono dati
+  che per legge vanno resi pubblici in un'informativa privacy).
+- Nuova `app/informativa-privacy/page.tsx`: 7 sezioni (Titolare, Categorie di
+  dati, Base giuridica e finalità con sotto-sezioni su conservazione e
+  modalità di raccolta, Modalità del trattamento, Comunicazione a terzi,
+  Tutela dei minori, Diritti dell'interessato). A differenza del template
+  originale: **niente marketing/newsletter/profilazione** (il form raccoglie
+  dati solo per gestire la richiesta di progetto, nessuna finalità
+  commerciale ulteriore concordata con l'utente), **niente terze parti
+  operative** (il template aveva un partner tour-operator; qui i soli
+  "fornitori terzi" sono Google/Gmail per Sheets ed email, e l'hosting),
+  **niente riferimento a CookieYes** (coerente con la decisione di non
+  integrarlo, vedi voce precedente in questo Log).
+- Styling coerente col resto dell'app: neutrali dominanti, accento lilla
+  solo su link (stessa palette di `lib/design-tokens.ts`), nessuna nuova
+  dipendenza (niente plugin `@tailwindcss/typography`, markup manuale con
+  componenti `Section`/`SubSection` locali alla pagina).
+- Collegata da due punti che già citavano "l'informativa privacy" come testo
+  libero: `IntroScreen.tsx` (nota sotto il bottone "Inizia") e
+  `ConsentStep.tsx` (checkbox di consenso finale) — entrambi i link aprono
+  in una **nuova scheda** (`target="_blank"`), scelta obbligata perché il
+  form non salva progressi tra sessioni (stato solo in memoria React): un
+  link in-tab avrebbe fatto perdere all'utente tutte le risposte già date.
+  Su `ConsentStep.tsx` aggiunto anche `stopPropagation` sul click del link,
+  perché è annidato in un `<label>` che attiva il Checkbox Radix al click:
+  senza, cliccare sul link avrebbe anche (in)avvertitamente spuntato/tolto
+  il consenso.
+- Verificato: `npm run build` pulito, nessun nuovo errore/warning di tipo.
+  Test in browser reale (Playwright): pagina `/informativa-privacy`
+  raggiungibile (200, screenshot controllato manualmente), nessun errore
+  console; link da `IntroScreen` verificato per `href` (`/informativa-privacy`)
+  e `target` (`_blank`).
+- `CLAUDE.md` aggiornato: nuova voce in "Cosa è già stato deciso" sulla
+  pagina privacy, checklist "Cosa manca" ridotta al solo deploy, struttura
+  file aggiornata.
+
+Non ancora fatto: deploy su Vercel — vedi piano per i dettagli (collegare
+repo, impostare env var, test end-to-end in produzione).

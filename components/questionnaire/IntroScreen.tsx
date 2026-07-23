@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { introCopy } from "@/content/questionnaire";
 import { motion as motionTokens } from "@/lib/design-tokens";
 
@@ -33,7 +34,18 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
         Inizia
         <ArrowRight className="h-4 w-4" />
       </button>
-      <p className="text-sm text-neutral-400">{introCopy.nota}</p>
+      <p className="text-sm text-neutral-400">
+        {introCopy.nota}{" "}
+        <Link
+          href="/informativa-privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-accent-600 underline underline-offset-2 hover:text-accent-700"
+        >
+          Leggi l&apos;informativa privacy
+        </Link>
+        .
+      </p>
     </motion.div>
   );
 }

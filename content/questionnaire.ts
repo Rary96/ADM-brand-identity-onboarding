@@ -42,7 +42,7 @@ export const introCopy = {
     "Un questionario per costruire un'identità visiva che ti rappresenti davvero.",
   tempoStimato: "10-15 minuti",
   nota:
-    "Le risposte facoltative puoi lasciarle in bianco: quello che non sai ora lo definiamo insieme in call. I tuoi dati sono trattati nel rispetto del GDPR — vedi la nostra informativa privacy.",
+    "Le risposte facoltative puoi lasciarle in bianco: quello che non sai ora lo definiamo insieme in call. I tuoi dati sono trattati nel rispetto del GDPR.",
 };
 
 export const midFormReminder =

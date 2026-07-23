@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft, Send } from "lucide-react";
+import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion as motionTokens } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -52,8 +53,18 @@ export function ConsentStep({
           className="mt-0.5 data-[state=checked]:border-accent-400 data-[state=checked]:bg-accent-300"
         />
         <span>
-          Ho letto e accetto l&apos;informativa privacy. Acconsento al trattamento dei miei dati
-          per la gestione del progetto di brand identity, nel rispetto del GDPR.
+          Ho letto e accetto{" "}
+          <Link
+            href="/informativa-privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-medium text-accent-600 underline underline-offset-2 hover:text-accent-700"
+          >
+            l&apos;informativa privacy
+          </Link>
+          . Acconsento al trattamento dei miei dati per la gestione del progetto di brand
+          identity, nel rispetto del GDPR.
         </span>
       </label>
 
