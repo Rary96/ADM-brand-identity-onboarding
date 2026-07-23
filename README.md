@@ -1,15 +1,42 @@
 # Questionario Onboarding — Brand Identity & Logo Design
 
-Step 2/3 completato: struttura file + schemi dati + UI/UX (Typeform-style, Next.js/Tailwind/shadcn, Framer Motion, progress bar). Prossimo step: API (Google Sheets, Resend, Drive upload).
+Modulo di onboarding clienti stile Typeform (una domanda per schermata, transizioni
+fluide, barra di progresso) per la raccolta del brief di Brand Identity/Logo Design.
+
+**Stato**: Step 3/3 (API e integrazioni) completo, funzionante e testato
+end-to-end. Resta solo il deploy su Vercel. Dettaglio completo delle decisioni,
+delle deviazioni dal piano originale e del perché in [`doc/PROGRESS.md`](doc/PROGRESS.md)
+e in [`CLAUDE.md`](CLAUDE.md) (sezione "Cosa è già stato deciso").
 
 ## Decisioni prese
 
-- **Branching nuovo brand / restyling**: una domanda iniziale in Sezione 2 mostra domande diverse a seconda del caso (vedi `content/questionnaire.ts`, campo `tipoProgetto`).
-- **Upload file**: verranno caricati su Google Drive via Service Account, link salvato su Google Sheets.
-- **Nessun salvataggio progressi**: form completabile in un'unica sessione (stato in memoria, nessun DB).
+- **Branching nuovo brand / restyling**: una domanda iniziale in Sezione 2 mostra
+  domande diverse a seconda del caso (vedi `content/questionnaire.ts`, campo
+  `tipoProgetto`).
+- **Salvataggio risposte**: Google Sheets via Service Account (`lib/google-sheets.ts`),
+  append-only, una riga per submission.
+- **Upload file**: niente Google Drive (deciso e poi cambiato in corso d'opera).
+  Ogni campo upload accetta allegato diretto via email (tetto globale 2 file,
+  2MB ciascuno, solo sull'email interna) oppure link incollato (Drive personale
+  del cliente, WeTransfer, Pinterest, ecc.), senza limiti — vedi
+  `lib/attachment-limits.ts`.
+- **Notifiche email**: doppio invio ad ogni submission (riepilogo interno +
+  conferma cliente) via **Nodemailer + SMTP Gmail (App Password)**, non Resend —
+  l'utente non ha un dominio da verificare (richiesto da Resend) e non vuole
+  comprarne uno solo per questo. Se il volume di invii dovesse crescere molto,
+  Resend torna la scelta più adatta, da rivalutare solo allora. Vedi
+  `lib/mailer.tsx`.
+- **Cookie banner (CookieYes)**: non integrato per questo progetto (nessun
+  cookie non tecnico/di profilazione in uso). Traccia di come si farebbe se
+  servisse in futuro conservata in `doc/PROGRESS.md`.
+- **Pagina privacy**: `/informativa-privacy`, dati reali del titolare, adattata
+  da un template esistente e ridotta a quello che il form fa davvero.
+- **Nessun salvataggio progressi tra sessioni**: form completabile in un'unica
+  sessione (stato in memoria, nessun DB).
 - **Solo italiano.**
-- **Palette**: Pantone 13-3905 TCX "Diaphanous Lilac" → `#C6C2CD`, usato in modo molto limitato (accenti, progress bar, focus states) su base neutra bianco/grigio. Vedi `lib/design-tokens.ts`.
-- **Notifiche email (Resend)**: una email di riepilogo a te (dalmontearianna.96@gmail.com) + una email di conferma al cliente.
+- **Palette**: Pantone 13-3905 TCX "Diaphanous Lilac" → `#C6C2CD`, usato in modo
+  molto limitato (accenti, progress bar, focus states) su base neutra
+  bianco/grigio. Vedi `lib/design-tokens.ts`.
 
 ## Contenuto ottimizzato rispetto al brief originale
 
@@ -23,11 +50,13 @@ Step 2/3 completato: struttura file + schemi dati + UI/UX (Typeform-style, Next.
 onboarding-brand-identity/
 ├── package.json
 ├── tailwind.config.ts
-├── components.json         # config shadcn/ui
+├── components.json          # config shadcn/ui
 ├── app/
 │   ├── layout.tsx           # font Inter, metadata
 │   ├── page.tsx              # monta <QuestionnaireWizard />
-│   └── globals.css            # tema shadcn (HSL vars) sopra la palette lilla/neutri
+│   ├── globals.css            # tema shadcn (HSL vars) sopra la palette lilla/neutri
+│   ├── api/submit/route.ts    # valida (Zod), scrive su Sheets, invia le due email
+│   └── informativa-privacy/   # pagina privacy policy
 ├── components/
 │   ├── ui/                    # primitive shadcn/ui (Radix + cva)
 │   └── questionnaire/
@@ -36,14 +65,30 @@ onboarding-brand-identity/
 │       ├── FieldRenderer.tsx          # smista ogni domanda al componente campo giusto
 │       ├── ProgressBar.tsx             # barra di progresso (accento lilla)
 │       ├── IntroScreen.tsx / OutroScreen.tsx / ConsentStep.tsx
+│       ├── AttachmentsContext.tsx      # stato allegati email (tetto globale)
 │       └── fields/                      # un componente per ogni tipologia di campo
 ├── lib/
 │   ├── schema.ts             # Zod schema + tipi TypeScript del questionario
 │   ├── design-tokens.ts      # Palette colori, font, spaziature, timing Framer Motion
-│   ├── questionnaire-steps.ts # flatten domande + branching nuovo brand/restyling
-│   └── validate-step.ts        # validazione "leggera" per step (obbligatorietà)
+│   ├── questionnaire-steps.ts # flatten domande + branching nuovo/restyling
+│   ├── validate-step.ts        # validazione "leggera" per step (obbligatorietà)
+│   ├── attachment-limits.ts    # tetto/tipi ammessi per allegati email
+│   ├── google-sheets.ts         # scrittura riga su Sheets
+│   ├── mailer.tsx                 # invio email via Nodemailer/Gmail SMTP
+│   ├── email-sections.ts           # riepilogo email da content/questionnaire.ts
+│   └── questionnaire-labels.ts      # enum → label italiane (condiviso Sheets/email)
+├── emails/                   # template React Email (riepilogo interno, conferma cliente)
 ├── content/
 │   └── questionnaire.ts      # Copy IT: sezioni, domande, guida cliente, placeholder
+└── doc/
+    └── PROGRESS.md           # log cronologico: decisioni, deviazioni dal piano, perché
 ```
 
-Le cartelle `emails/` (React Email) e le API routes (Google Sheets, Drive, Resend) verranno aggiunte nello step successivo. L'invio del form al momento valida i dati con `questionarioSchema` e stampa il payload in console (stub in attesa dell'endpoint `/api/submit`).
+## Documentazione
+
+- [`CLAUDE.md`](CLAUDE.md) — regole di ingaggio e decisioni di progetto non
+  ridiscutibili senza motivo (fonte di verità per Claude Code).
+- [`doc/PROGRESS.md`](doc/PROGRESS.md) — log cronologico dettagliato: cosa è
+  stato fatto in ogni fase, ogni deviazione dal piano originale con il perché
+  (es. Resend → Nodemailer, Google Drive → allegati email, CookieYes non
+  integrato), utile anche come riferimento riusabile per progetti simili.

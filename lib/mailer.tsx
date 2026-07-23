@@ -13,7 +13,7 @@ export type MailAttachment = ParsedAttachment;
  * Invio via SMTP Gmail (App Password), non Resend: nessun dominio da
  * verificare, nessun refresh token OAuth da rinnovare. Se in futuro il volume
  * di invii dovesse crescere molto, Resend (o altro provider transazionale)
- * torna la scelta più adatta — vedi PROGRESS.md.
+ * torna la scelta più adatta — vedi doc/PROGRESS.md.
  */
 function getTransport() {
   const user = process.env.GMAIL_USER;

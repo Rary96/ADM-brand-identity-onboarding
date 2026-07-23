@@ -8,17 +8,14 @@ voci passate. Lo stato in cima ("Stato attuale") va invece tenuto aggiornato.
 
 ## Stato attuale
 
-**Fase**: 3/4 completa, 4/4 (Privacy) completa — **Google Sheets, Email, Upload
-e pagina privacy funzionanti**: ogni submission reale scrive una riga su
-Google Sheets, invia due email (riepilogo interno + conferma cliente) via
-Nodemailer/Gmail SMTP (non Resend), e i campi upload accettano allegati
-diretti (max 2 in totale, 2MB ciascuno, solo sull'email interna) oltre al
-link incollato — **niente Google Drive**, deciso e poi cambiato in corso
-d'opera (vedi Log). Testato end-to-end via browser reale, inclusi due bug
-trovati e corretti durante il test. **CookieYes non verrà integrato in questo
-progetto** (deciso dall'utente, vedi Log) — il form non usa cookie non
-tecnici. `/informativa-privacy` è online e linkata da intro e step di
-consenso (vedi Log). Resta solo: **Deploy su Vercel**, guidato passo-passo.
+**Fase**: 🎉 **Progetto completo e in produzione.** Google Sheets, Email,
+Upload, pagina privacy e deploy su Vercel tutti funzionanti e testati — anche
+in produzione, con una submission reale (allegato incluso): riga corretta su
+Sheets, entrambe le email ricevute, nessun errore. URL pubblico:
+`https://adm-brand-identity-onboarding.vercel.app` (piano Hobby, team "ADM
+Design"). Push su `main` → redeploy automatico, nessuna azione manuale
+richiesta per gli aggiornamenti futuri. **CookieYes non è stato integrato**
+(deciso dall'utente, vedi Log) — il form non usa cookie non tecnici.
 
 | Fase | Cosa include | Stato |
 |---|---|---|
@@ -26,7 +23,7 @@ consenso (vedi Log). Resta solo: **Deploy su Vercel**, guidato passo-passo.
 | 2. UI/UX | `app/`, `components/` — form una domanda per volta, progress bar, keyboard nav | ✅ Fatto (Claude Code) |
 | 3. API e integrazioni | `app/api/submit/route.ts`, Google Sheets ✅, email ✅, upload (allegati+link, niente Drive) ✅ | ✅ Fatto |
 | 4. Privacy | `app/informativa-privacy/page.tsx`, link da intro/consenso | ✅ Fatto |
-| 5. Setup account esterni | Vercel (azione manuale dell'utente, non di Claude Code) | ⬜ Da fare |
+| 5. Deploy su Vercel | Progetto collegato, env var impostate, test end-to-end in produzione | ✅ Fatto |
 
 **Non in scope**: CookieYes/banner cookie — deciso di non integrarlo per questo
 progetto (vedi Log 2026-07-23).
@@ -423,3 +420,49 @@ Non ancora fatto: pagina privacy, CookieYes, deploy — vedi piano per l'ordine.
 
 Non ancora fatto: deploy su Vercel — vedi piano per i dettagli (collegare
 repo, impostare env var, test end-to-end in produzione).
+
+**2026-07-23 — Claude Code** — Implementata la Fase 5 del piano: deploy su
+Vercel. **Progetto completo.**
+
+- Account Vercel creato con login GitHub, piano **Hobby** (scelta consapevole
+  dell'utente dopo aver confrontato con Pro: Hobby è gratuito ma riservato a
+  uso non commerciale per i ToS di Vercel — visto il volume bassissimo del
+  progetto l'utente ha preferito partire da lì, con possibilità di upgrade a
+  Pro in qualsiasi momento senza dover riconfigurare nulla).
+- Progetto importato da `Rary96/ADM-brand-identity-onboarding` (branch
+  `main`), preset Next.js auto-rilevato, Root Directory `./` (il repo
+  coincide con la cartella del progetto, nessuna sotto-cartella da
+  configurare).
+- 5 variabili d'ambiente impostate su Vercel (Production + Preview):
+  `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SHEET_ID`, `GMAIL_USER`,
+  `GMAIL_APP_PASSWORD` incollate in blocco (Vercel spezza da sé il formato
+  `CHIAVE=valore` multi-riga), `GOOGLE_PRIVATE_KEY` aggiunta a parte in una
+  riga singola (troppo lunga/particolare per l'auto-parsing, valore incollato
+  senza le virgolette singole usate solo in `.env.local` per il parsing
+  locale).
+- Primo deploy completato con successo. URL pubblico:
+  `https://adm-brand-identity-onboarding.vercel.app`. Confermato che ogni
+  push su `main` triggera un redeploy automatico in produzione (integrazione
+  nativa Vercel↔GitHub, nessuna azione manuale richiesta per gli
+  aggiornamenti futuri).
+- **Verificato end-to-end in produzione** con una submission reale via
+  Playwright (non solo build/health-check): compilazione completa del
+  questionario con un allegato reale (`test-logo.png`) su
+  `https://adm-brand-identity-onboarding.vercel.app`, risposta
+  `POST /api/submit` → `200 {"ok":true}`, nessun errore console, raggiunta la
+  schermata "Fatto". Riga corrispondente controllata su Google Sheets (nota
+  allegato corretta: "+ 1 allegati email: test-logo.png") tramite script
+  temporaneo con le stesse credenziali del Service Account, poi rimossa
+  (era solo di test). L'utente ha confermato manualmente la ricezione di
+  entrambe le email (riepilogo interno + conferma cliente) sulla propria
+  casella — unico passaggio non verificabile da Claude Code, che non ha
+  accesso alla casella Gmail dell'utente.
+- `CLAUDE.md` e questo file aggiornati: nessuna fase residua sul flusso di
+  invio del questionario, checklist "Cosa manca" rimossa, tabella di stato
+  tutta a ✅.
+
+**Stato finale**: le 5 fasi del piano Step 3/4 (Sheets → Email → Upload →
+Privacy → Deploy) sono tutte completate e verificate, comprese le tre
+deviazioni concordate lungo il percorso (niente Resend, niente Google Drive,
+niente CookieYes — vedi voci di Log precedenti per il dettaglio di ciascuna).
+Il questionario è pubblicamente raggiungibile e funzionante.

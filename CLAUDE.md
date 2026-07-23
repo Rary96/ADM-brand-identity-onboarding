@@ -45,7 +45,7 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   (`tipoProgetto`) mostra domande diverse a seconda del caso — vedi
   `lib/schema.ts` (superRefine) e `content/questionnaire.ts` (`visibleIf`).
 - **Upload file**: NON su Google Drive (deciso e poi cambiato in corso d'opera —
-  vedi Log 2026-07-23 in `PROGRESS.md`). Due modi, entrambi disponibili sullo
+  vedi Log 2026-07-23 in `doc/PROGRESS.md`). Due modi, entrambi disponibili sullo
   stesso campo (`UploadLinkField.tsx`): allegato diretto via email (tetto
   GLOBALE su tutta la submission, non per campo, perché il body di una funzione
   serverless è limitato a ~4.5MB — vedi `lib/attachment-limits.ts`: max 2 file
@@ -98,7 +98,7 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   dall'utente il 2026-07-23 ("non serve integrarli, almeno al momento"). Il
   form non usa cookie non tecnici/di profilazione, quindi non è bloccante per
   il deploy. Se in futuro dovesse servire (es. aggiunta di analytics/tracking),
-  vedi la traccia di come si sarebbe dovuto fare in `PROGRESS.md` (Log
+  vedi la traccia di come si sarebbe dovuto fare in `doc/PROGRESS.md` (Log
   2026-07-23) — non reintrodurlo senza che l'utente lo richieda esplicitamente.
 - **Pagina privacy** (`app/informativa-privacy/page.tsx`): titolare del
   trattamento Arianna Dal Monte (freelance, dati reali — P.IVA, sede, C.F. —
@@ -148,39 +148,46 @@ onboarding-brand-identity/
 │   └── questionnaire.ts       # Copy IT: sezioni, domande, guida cliente, placeholder
 ├── app/informativa-privacy/
 │   └── page.tsx                # Pagina privacy policy (dati reali titolare, adattata da template)
+├── doc/
+│   └── PROGRESS.md            # Log cronologico dettagliato: decisioni, deviazioni dal piano, perché
 ```
 
 Repo GitHub collegato: `Rary96/ADM-brand-identity-onboarding` (branch `main`).
+Deployato in produzione su Vercel (piano Hobby, team "ADM Design"):
+`https://adm-brand-identity-onboarding.vercel.app`. Push su `main` → redeploy
+automatico in produzione (integrazione Vercel↔GitHub nativa, nessuna azione
+manuale richiesta).
 
-**Step 1/3 (dati) e Step 2/3 (UI/UX) completati. Step 3/3 (API) in corso:**
-`app/api/submit/route.ts` valida con `questionarioSchema` server-side, scrive
-davvero su Google Sheets (`lib/google-sheets.ts`), invia le due email via
-Nodemailer/Gmail SMTP con allegati diretti quando presenti (`lib/mailer.tsx`) —
-funzionante e testato end-to-end. `QuestionnaireWizard.handleSubmit` invia un
-vero `FormData` a `/api/submit`, non più JSON con `console.log`.
+**Progetto completo: Step 1/3 (dati), Step 2/3 (UI/UX) e Step 3/3 (API) tutti
+fatti.** `app/api/submit/route.ts` valida con `questionarioSchema`
+server-side, scrive davvero su Google Sheets (`lib/google-sheets.ts`), invia
+le due email via Nodemailer/Gmail SMTP con allegati diretti quando presenti
+(`lib/mailer.tsx`). `QuestionnaireWizard.handleSubmit` invia un vero
+`FormData` a `/api/submit`. Pagina privacy online. **Testato end-to-end anche
+in produzione** (submission reale con allegato: riga corretta su Sheets,
+entrambe le email ricevute, nessun errore) — vedi `doc/PROGRESS.md` per il
+dettaglio del test.
 
-## Cosa manca ancora per completare l'invio (Step 3/3 — API)
+## Stato
 
-Fatto: Google Sheets, email (riepilogo interno + conferma cliente), upload
-(allegati email + link, niente Drive), pagina privacy policy. Resta:
-
-1. **Deploy su Vercel**: collegare il repo, impostare le env var (vedi sotto),
-   test end-to-end in produzione con un invio reale.
+Non ci sono più fasi aperte sul flusso di invio del questionario. Eventuali
+prossimi lavori (nuove domande, restyling, nuove integrazioni) partono da
+zero come richieste separate — non c'è una checklist residua da questo piano.
 
 Non in scope (deciso, non ridiscutere senza motivo): banner cookie/CookieYes —
 vedi voce dedicata sopra in "Cosa è già stato deciso".
 
-## Variabili d'ambiente richieste (da configurare su Vercel, non nel codice)
+## Variabili d'ambiente (impostate su Vercel, Production e Preview)
 
 ```
-GOOGLE_SERVICE_ACCOUNT_EMAIL=      # fatto, in .env.local
-GOOGLE_PRIVATE_KEY=                # fatto, in .env.local
-GOOGLE_SHEET_ID=                   # fatto, in .env.local
-GMAIL_USER=                        # fatto, in .env.local (dalmontearianna.96@gmail.com)
-GMAIL_APP_PASSWORD=                # fatto, in .env.local
+GOOGLE_SERVICE_ACCOUNT_EMAIL=      # fatto, .env.local locale + Vercel
+GOOGLE_PRIVATE_KEY=                # fatto, .env.local locale + Vercel
+GOOGLE_SHEET_ID=                   # fatto, .env.local locale + Vercel
+GMAIL_USER=                        # fatto, .env.local locale + Vercel (dalmontearianna.96@gmail.com)
+GMAIL_APP_PASSWORD=                # fatto, .env.local locale + Vercel
 ```
 
 Questi valori li genera/recupera l'utente (login Google Cloud Console, Google
-Account, Vercel, CookieYes) — non vanno inventati né richiesti come input di
-codice. Quelli già raccolti vivono solo in `.env.local` (gitignored) in locale;
-su Vercel andranno impostati come Environment Variables al momento del deploy.
+Account, Vercel) — non vanno inventati né richiesti come input di codice.
+Vivono solo in `.env.local` (gitignored) in locale e nelle Environment
+Variables di Vercel in produzione — mai nel codice sorgente.
