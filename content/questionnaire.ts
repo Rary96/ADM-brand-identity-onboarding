@@ -278,14 +278,16 @@ export const sections: Section[] = [
       {
         id: "loghiRiferimento",
         label: "Carica o linka 3-5 loghi/brand (anche di altri settori) che ti piacciono, spiegando perché",
-        guida: "Non devono essere dello stesso settore: cerca ciò che 'ti fa dire wow' a prescindere dal prodotto.",
+        guida:
+          "Non devono essere dello stesso settore: cerca ciò che 'ti fa dire wow' a prescindere dal prodotto. Puoi allegare direttamente file piccoli (JPG, PNG, WEBP, SVG, PDF fino a 2MB, max 2 in totale su tutto il form) oppure incollare un link (Drive, WeTransfer, Pinterest...) per file più grandi o numerosi.",
         type: "upload",
         required: true,
       },
       {
         id: "stiliDaEvitare",
         label: "Quali stili NON ti rappresentano o vuoi assolutamente evitare?",
-        guida: "Es. 'Niente stile clipart/anni 2000, niente colori pastello'.",
+        guida:
+          "Es. 'Niente stile clipart/anni 2000, niente colori pastello'. Allegato diretto fino a 2MB (JPG, PNG, WEBP, SVG, PDF) o link per file più grandi.",
         type: "upload",
         required: false,
       },
@@ -319,7 +321,8 @@ export const sections: Section[] = [
       {
         id: "assetEsistenti",
         label: "Esiste già un logo, un naming registrato, o linee guida di brand da rispettare?",
-        guida: "Allega anche versioni vecchie o bozze abbandonate, anche se non ti piacciono più.",
+        guida:
+          "Allega anche versioni vecchie o bozze abbandonate, anche se non ti piacciono più. Allegato diretto fino a 2MB (JPG, PNG, WEBP, SVG, PDF) o link per file più grandi.",
         type: "upload",
         required: false, // required=true dinamicamente se tipoProgetto=restyling, vedi lib/schema.ts
       },

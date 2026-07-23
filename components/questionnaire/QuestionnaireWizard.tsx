@@ -11,6 +11,16 @@ import { IntroScreen } from "@/components/questionnaire/IntroScreen";
 import { OutroScreen } from "@/components/questionnaire/OutroScreen";
 import { QuestionCard } from "@/components/questionnaire/QuestionCard";
 import { ConsentStep } from "@/components/questionnaire/ConsentStep";
+import {
+  AttachmentsContext,
+  type AttachmentItem,
+} from "@/components/questionnaire/AttachmentsContext";
+import {
+  ALLOWED_ATTACHMENT_TYPES,
+  MAX_ATTACHMENTS,
+  MAX_ATTACHMENT_BYTES,
+  formatBytes,
+} from "@/lib/attachment-limits";
 
 type Phase = "intro" | "question" | "consent" | "outro";
 
@@ -27,6 +37,32 @@ export function QuestionnaireWizard() {
   const hasShownReminder = useRef(false);
   const reminderTimeout = useRef<ReturnType<typeof setTimeout>>();
   const [submissionId] = useState(() => crypto.randomUUID());
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+
+  function addAttachment(fieldId: string, file: File): string | null {
+    if (attachments.length >= MAX_ATTACHMENTS) {
+      return "Limite di 2 allegati diretti raggiunto — usa un link per altri file.";
+    }
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      return `File troppo pesante (max ${formatBytes(MAX_ATTACHMENT_BYTES)}) — usa un link per file più grandi.`;
+    }
+    if (!ALLOWED_ATTACHMENT_TYPES.includes(file.type)) {
+      return "Formato non supportato per l'allegato diretto — usa un link.";
+    }
+    setAttachments((prev) => [...prev, { id: crypto.randomUUID(), fieldId, file }]);
+    return null;
+  }
+
+  function removeAttachment(id: string) {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  }
+
+  const attachmentsContextValue = {
+    attachments,
+    remainingSlots: MAX_ATTACHMENTS - attachments.length,
+    addAttachment,
+    removeAttachment,
+  };
 
   const tipoProgetto = answers.tipoProgetto as Questionario["tipoProgetto"] | undefined;
   const steps = useMemo(() => buildSteps(tipoProgetto), [tipoProgetto]);
@@ -68,7 +104,8 @@ export function QuestionnaireWizard() {
   function handleNext(overrideValue?: unknown) {
     if (!question) return;
     const value = overrideValue !== undefined ? overrideValue : answers[question.id];
-    const message = validateStep(question, value);
+    const hasAttachment = attachments.some((a) => a.fieldId === question.id);
+    const message = validateStep(question, value, hasAttachment);
     if (message) {
       setError(message);
       return;
@@ -117,14 +154,18 @@ export function QuestionnaireWizard() {
     setSubmitting(true);
     setError(null);
     try {
-      const response = await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: result.data,
-          meta: { submissionId, submittedAt: new Date().toISOString() },
-        }),
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(result.data));
+      formData.append(
+        "meta",
+        JSON.stringify({ submissionId, submittedAt: new Date().toISOString() })
+      );
+      attachments.forEach((attachment, i) => {
+        formData.append(`attachment_${i}`, attachment.file, attachment.file.name);
+        formData.append(`attachment_${i}_field`, attachment.fieldId);
       });
+
+      const response = await fetch("/api/submit", { method: "POST", body: formData });
       if (!response.ok) throw new Error("submit failed");
       setPhase("outro");
     } catch {
@@ -135,6 +176,7 @@ export function QuestionnaireWizard() {
   }
 
   return (
+    <AttachmentsContext.Provider value={attachmentsContextValue}>
     <div className="flex min-h-screen flex-col items-center bg-white px-6 py-24">
       {phase !== "intro" && <ProgressBar progress={progress} />}
 
@@ -192,5 +234,6 @@ export function QuestionnaireWizard() {
         </AnimatePresence>
       </div>
     </div>
+    </AttachmentsContext.Provider>
   );
 }

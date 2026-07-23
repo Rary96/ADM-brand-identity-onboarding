@@ -15,12 +15,13 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   Progress, Card, Dialog, ecc.).
 - **Integrazioni & Backend**:
   - Google Sheets API (via Service Account) — salvataggio risposte
-  - Google Drive API (stesso Service Account) — upload file/immagini di riferimento,
-    link salvato nella riga corrispondente su Sheets
   - Nodemailer via SMTP Gmail (App Password) + React Email per il markup — invio
-    notifiche. Non Resend: niente dominio da verificare, niente OAuth/refresh
+    notifiche, allegati diretti inclusi (max 2 file, 2MB ciascuno, sull'email
+    interna). Non Resend: niente dominio da verificare, niente OAuth/refresh
     token da rinnovare (vedi decisione sotto). Se il volume di invii dovesse
     crescere molto, Resend torna la scelta più adatta — da rivalutare allora.
+    Niente Google Drive: scartato a favore di allegati email + link (vedi
+    decisione "Upload file" sotto).
   - CookieYes — banner cookie/consenso
   - Zod — validazione dati, sia client-side che server-side
 
@@ -44,9 +45,16 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
 - **Branching nuovo brand / restyling**: una domanda iniziale in Sezione 2
   (`tipoProgetto`) mostra domande diverse a seconda del caso — vedi
   `lib/schema.ts` (superRefine) e `content/questionnaire.ts` (`visibleIf`).
-- **Upload file**: caricati su Google Drive via Service Account, link salvato su
-  Google Sheets (non URL esterni per default, ma i campi accettano anche link se il
-  cliente preferisce incollare un URL invece di caricare un file).
+- **Upload file**: NON su Google Drive (deciso e poi cambiato in corso d'opera —
+  vedi Log 2026-07-23 in `PROGRESS.md`). Due modi, entrambi disponibili sullo
+  stesso campo (`UploadLinkField.tsx`): allegato diretto via email (tetto
+  GLOBALE su tutta la submission, non per campo, perché il body di una funzione
+  serverless è limitato a ~4.5MB — vedi `lib/attachment-limits.ts`: max 2 file
+  in totale, 2MB ciascuno, solo immagini comuni + PDF) oppure link incollato
+  (Drive/WeTransfer/SwissTransfer/Pinterest/ecc.) senza alcun limite, per file
+  più grandi o numerosi. Gli allegati diretti vanno solo nell'email interna
+  (mai su Sheets come file — la nota della colonna corrispondente elenca solo
+  i nomi), il link va anche su Sheets.
 - **Nessun salvataggio progressi tra sessioni**: form completabile in un'unica
   sessione, stato in memoria React (nessun DB, coerente con lo stack scelto).
 - **Solo italiano**, tono informale in seconda persona singolare ("tu").
@@ -82,8 +90,11 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   `z.array(z.string())` senza enum, quindi in UI sono chip-input a testo libero
   (`ChipsField`), non checkbox con lista fissa — coerente con lo schema, non
   inventare una tassonomia di opzioni senza chiederlo.
-- **Upload file, stato attuale**: solo link incollato (Drive/Pinterest/Instagram/sito),
-  non ancora vero upload da filesystem — vedi checklist "Cosa manca" sotto.
+- **Allegati email vs prop-drilling**: lo stato degli allegati (chi ha allegato
+  cosa, tetto globale) vive in `AttachmentsContext` (React Context), non passato
+  come prop attraverso `QuestionCard`/`FieldRenderer` — quei due restano
+  dispatcher generici che non devono sapere nulla di allegati. Solo
+  `UploadLinkField` consuma il context via `useFieldAttachments(fieldId)`.
 
 ## Struttura file già creata
 
@@ -104,6 +115,7 @@ onboarding-brand-identity/
 │       ├── QuestionCard.tsx           # layout singola domanda + validazione + nav
 │       ├── FieldRenderer.tsx           # smista ogni domanda al componente campo giusto
 │       ├── ProgressBar.tsx / IntroScreen.tsx / OutroScreen.tsx / ConsentStep.tsx
+│       ├── AttachmentsContext.tsx      # stato allegati email (tetto globale)
 │       └── fields/                      # ChipsField, PillMultiSelectField, PriceScaleField,
 │                                          # ToneScaleField, GridPositionField, UploadLinkField,
 │                                          # ColorField, SupportsField, DeadlineField, SimpleFields
@@ -111,7 +123,13 @@ onboarding-brand-identity/
 │   ├── schema.ts              # Zod schema + tipi TypeScript, branching, validazioni
 │   ├── design-tokens.ts       # Palette colori, font, radii, timing animazioni
 │   ├── questionnaire-steps.ts  # flatten domande sezioni + filtro branching nuovo/restyling
-│   └── validate-step.ts         # validazione "leggera" per step (solo obbligatorietà)
+│   ├── validate-step.ts         # validazione "leggera" per step (solo obbligatorietà)
+│   ├── attachment-limits.ts      # tetto/tipi ammessi per allegati email (usato client+server)
+│   ├── google-sheets.ts           # scrittura riga su Sheets
+│   ├── mailer.tsx                  # invio email via Nodemailer/Gmail SMTP
+│   ├── email-sections.ts            # riepilogo email da content/questionnaire.ts
+│   └── questionnaire-labels.ts       # enum → label italiane (condiviso Sheets/email)
+├── emails/                     # template React Email (riepilogo interno, conferma cliente)
 ├── content/
 │   └── questionnaire.ts       # Copy IT: sezioni, domande, guida cliente, placeholder
 ```
@@ -120,29 +138,23 @@ Repo GitHub collegato: `Rary96/ADM-brand-identity-onboarding` (branch `main`).
 
 **Step 1/3 (dati) e Step 2/3 (UI/UX) completati. Step 3/3 (API) in corso:**
 `app/api/submit/route.ts` valida con `questionarioSchema` server-side, scrive
-davvero su Google Sheets (`lib/google-sheets.ts`) e invia le due email via
-Nodemailer/Gmail SMTP (`lib/mailer.tsx`) — funzionante e testato end-to-end.
-`QuestionnaireWizard.handleSubmit` chiama l'API reale, non più `console.log`.
+davvero su Google Sheets (`lib/google-sheets.ts`), invia le due email via
+Nodemailer/Gmail SMTP con allegati diretti quando presenti (`lib/mailer.tsx`) —
+funzionante e testato end-to-end. `QuestionnaireWizard.handleSubmit` invia un
+vero `FormData` a `/api/submit`, non più JSON con `console.log`.
 
 ## Cosa manca ancora per completare l'invio (Step 3/3 — API)
 
-Fatto: Google Sheets, email (riepilogo interno + conferma cliente). Ordine
-consigliato per il resto:
+Fatto: Google Sheets, email (riepilogo interno + conferma cliente), upload
+(allegati email + link, niente Drive). Ordine consigliato per il resto:
 
-1. **Upload file reale** (gap noto): oggi i campi `loghiRiferimento`,
-   `stiliDaEvitare`, `assetEsistenti` accettano SOLO link incollati
-   (`UploadLinkField`), non ancora un vero upload da file system. Serve
-   `app/api/upload/route.ts` (Google Drive API, stesso Service Account già usato
-   per Sheets — va solo abilitata l'API e creata/condivisa la cartella
-   destinazione) + una UI drag-and-drop/file-picker — il link resta comunque come
-   alternativa, come da decisione originale.
-2. **Pagina informativa privacy**: intro e step di consenso citano già
+1. **Pagina informativa privacy**: intro e step di consenso citano già
    "l'informativa privacy" ma non esiste ancora una pagina/link reale — necessaria
    prima di raccogliere dati veri (GDPR). L'utente ha un testo esistente sul sito
    principale ADM da adattare.
-3. **CookieYes**: script nel layout + banner cookie, variabile
+2. **CookieYes**: script nel layout + banner cookie, variabile
    `NEXT_PUBLIC_COOKIEYES_ID`.
-4. **Deploy su Vercel**: collegare il repo, impostare le env var (vedi sotto),
+3. **Deploy su Vercel**: collegare il repo, impostare le env var (vedi sotto),
    test end-to-end in produzione con un invio reale.
 
 ## Variabili d'ambiente richieste (da configurare su Vercel, non nel codice)
@@ -151,7 +163,6 @@ consigliato per il resto:
 GOOGLE_SERVICE_ACCOUNT_EMAIL=      # fatto, in .env.local
 GOOGLE_PRIVATE_KEY=                # fatto, in .env.local
 GOOGLE_SHEET_ID=                   # fatto, in .env.local
-GOOGLE_DRIVE_FOLDER_ID=            # da fare (Fase upload file)
 GMAIL_USER=                        # fatto, in .env.local (dalmontearianna.96@gmail.com)
 GMAIL_APP_PASSWORD=                # fatto, in .env.local
 NEXT_PUBLIC_COOKIEYES_ID=          # da fare (Fase privacy/cookie)

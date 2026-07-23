@@ -81,7 +81,7 @@ export function FieldRenderer({ question, value, onChange, onSubmit }: FieldRend
     case "stiliDaEvitare":
     case "assetEsistenti": {
       const v = (value as { urls: string[]; note?: string } | undefined) ?? { urls: [], note: "" };
-      return <UploadLinkField value={v} onChange={onChange} />;
+      return <UploadLinkField fieldId={question.id} value={v} onChange={onChange} />;
     }
     case "colori": {
       const v = (value as Questionario["colori"]) ?? { preferiti: [], daEvitare: [], note: "" };

@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import type { Questionario } from "@/lib/schema";
 import { getOptionLabel, getOptionLabels } from "@/lib/questionnaire-labels";
+import type { ParsedAttachment } from "@/lib/attachment-limits";
 
 export interface SubmissionMeta {
   submissionId: string;
@@ -8,6 +9,21 @@ export interface SubmissionMeta {
 }
 
 const join = (arr?: string[]) => (arr ?? []).join(", ");
+
+/** Aggiunge alla nota di un campo upload l'elenco degli eventuali allegati email. */
+function noteWithAttachments(
+  note: string | undefined,
+  fieldId: string,
+  attachments: ParsedAttachment[]
+): string {
+  const fieldAttachments = attachments.filter((a) => a.fieldId === fieldId);
+  const base = note ?? "";
+  if (fieldAttachments.length === 0) return base;
+  const list = `(+ ${fieldAttachments.length} allegati email: ${fieldAttachments
+    .map((a) => a.filename)
+    .join(", ")})`;
+  return base ? `${base} ${list}` : list;
+}
 
 function getSheetsClient() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -30,7 +46,11 @@ function getSheetsClient() {
  * non ancora "colonnati". Ordine e header vanno tenuti allineati alla prima
  * riga del tab "Risposte" nello Sheet.
  */
-function buildRow(data: Questionario, meta: SubmissionMeta): (string | number)[] {
+function buildRow(
+  data: Questionario,
+  meta: SubmissionMeta,
+  attachments: ParsedAttachment[]
+): (string | number)[] {
   return [
     meta.submittedAt,
     meta.submissionId,
@@ -64,15 +84,15 @@ function buildRow(data: Questionario, meta: SubmissionMeta): (string | number)[]
     data.toneEParole?.paroleSempre ?? "",
     data.toneEParole?.paroleMai ?? "",
     join(data.loghiRiferimento.urls),
-    data.loghiRiferimento.note ?? "",
+    noteWithAttachments(data.loghiRiferimento.note, "loghiRiferimento", attachments),
     join(data.stiliDaEvitare?.urls),
-    data.stiliDaEvitare?.note ?? "",
+    noteWithAttachments(data.stiliDaEvitare?.note, "stiliDaEvitare", attachments),
     getOptionLabel("tipologiaMarchio", data.tipologiaMarchio),
     join(data.colori?.preferiti),
     join(data.colori?.daEvitare),
     data.colori?.note ?? "",
     join(data.assetEsistenti?.urls),
-    data.assetEsistenti?.note ?? "",
+    noteWithAttachments(data.assetEsistenti?.note, "assetEsistenti", attachments),
     join(data.supportiEVincoli?.supporti),
     data.supportiEVincoli?.vincoliTecnici ?? "",
     join(data.formatiRichiesti),
@@ -85,7 +105,11 @@ function buildRow(data: Questionario, meta: SubmissionMeta): (string | number)[]
   ];
 }
 
-export async function appendSubmissionRow(data: Questionario, meta: SubmissionMeta) {
+export async function appendSubmissionRow(
+  data: Questionario,
+  meta: SubmissionMeta,
+  attachments: ParsedAttachment[] = []
+) {
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
   if (!spreadsheetId) throw new Error("GOOGLE_SHEET_ID mancante");
 
@@ -95,6 +119,6 @@ export async function appendSubmissionRow(data: Questionario, meta: SubmissionMe
     range: "Risposte!A1",
     valueInputOption: "RAW",
     insertDataOption: "INSERT_ROWS",
-    requestBody: { values: [buildRow(data, meta)] },
+    requestBody: { values: [buildRow(data, meta, attachments)] },
   });
 }

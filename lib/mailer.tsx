@@ -3,8 +3,11 @@ import { render } from "@react-email/render";
 import { InternalSummaryEmail } from "@/emails/InternalSummaryEmail";
 import { ClientConfirmationEmail } from "@/emails/ClientConfirmationEmail";
 import type { Questionario } from "@/lib/schema";
+import type { ParsedAttachment } from "@/lib/attachment-limits";
 
 const INTERNAL_RECIPIENT = "dalmontearianna.96@gmail.com";
+
+export type MailAttachment = ParsedAttachment;
 
 /**
  * Invio via SMTP Gmail (App Password), non Resend: nessun dominio da
@@ -24,7 +27,11 @@ function getTransport() {
   });
 }
 
-export async function sendInternalSummaryEmail(data: Questionario, submissionId: string) {
+export async function sendInternalSummaryEmail(
+  data: Questionario,
+  submissionId: string,
+  attachments: MailAttachment[] = []
+) {
   const transport = getTransport();
   const html = await render(<InternalSummaryEmail data={data} submissionId={submissionId} />);
   await transport.sendMail({
@@ -32,6 +39,7 @@ export async function sendInternalSummaryEmail(data: Questionario, submissionId:
     to: INTERNAL_RECIPIENT,
     subject: `Nuova submission — ${data.aziendaReferente}`,
     html,
+    attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })),
   });
 }
 
@@ -39,7 +47,7 @@ export async function sendClientConfirmationEmail(data: Questionario) {
   const transport = getTransport();
   const html = await render(<ClientConfirmationEmail aziendaReferente={data.aziendaReferente} />);
   await transport.sendMail({
-    from: `Studio ADM <${process.env.GMAIL_USER}>`,
+    from: `Arianna Dal Monte | ADM Design & Digital <${process.env.GMAIL_USER}>`,
     to: data.email,
     subject: "Grazie — ho ricevuto le tue risposte",
     html,

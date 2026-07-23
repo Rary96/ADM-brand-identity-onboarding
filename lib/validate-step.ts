@@ -11,7 +11,8 @@ const urlSchema = z.string().url();
  */
 export function validateStep(
   question: StepQuestion,
-  value: unknown
+  value: unknown,
+  hasAttachment = false
 ): string | null {
   if (!question.required) return null;
 
@@ -25,8 +26,9 @@ export function validateStep(
     }
     case "loghiRiferimento": {
       const v = value as { urls?: string[]; note?: string } | undefined;
-      const hasValue = (v?.urls && v.urls.length > 0) || (v?.note && v.note.trim().length > 0);
-      return hasValue ? null : "Aggiungi almeno un riferimento";
+      const hasValue =
+        (v?.urls && v.urls.length > 0) || (v?.note && v.note.trim().length > 0) || hasAttachment;
+      return hasValue ? null : "Aggiungi almeno un riferimento (link o allegato)";
     }
     default:
       break;
@@ -48,7 +50,8 @@ export function validateStep(
         : "Campo obbligatorio";
     case "upload": {
       const v = value as { urls?: string[]; note?: string } | undefined;
-      const hasValue = (v?.urls && v.urls.length > 0) || (v?.note && v.note.trim().length > 0);
+      const hasValue =
+        (v?.urls && v.urls.length > 0) || (v?.note && v.note.trim().length > 0) || hasAttachment;
       return hasValue ? null : "Campo obbligatorio";
     }
     default:

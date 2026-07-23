@@ -8,19 +8,21 @@ voci passate. Lo stato in cima ("Stato attuale") va invece tenuto aggiornato.
 
 ## Stato attuale
 
-**Fase**: 3/4 in corso — **Google Sheets ed Email funzionanti**: ogni submission
-reale scrive una riga su Google Sheets e invia due email (riepilogo interno +
-conferma cliente) via Nodemailer/Gmail SMTP, non Resend (vedi Log per il perché).
-Testato end-to-end sia via chiamata diretta all'API sia via browser reale. Restano
-da fare, nell'ordine concordato: Upload file reale (Drive) → Privacy/Cookie →
-Deploy. Setup dei prossimi account/servizi (Google Drive API, CookieYes, Vercel)
-guidato passo-passo fase per fase, non tutto insieme.
+**Fase**: 3/4 quasi completa — **Google Sheets, Email e Upload funzionanti**:
+ogni submission reale scrive una riga su Google Sheets, invia due email
+(riepilogo interno + conferma cliente) via Nodemailer/Gmail SMTP (non Resend),
+e i campi upload accettano allegati diretti (max 2 in totale, 2MB ciascuno,
+solo sull'email interna) oltre al link incollato — **niente Google Drive**,
+deciso e poi cambiato in corso d'opera (vedi Log). Testato end-to-end via
+browser reale, inclusi due bug trovati e corretti durante il test. Restano da
+fare, nell'ordine concordato: Privacy/Cookie → Deploy. Setup dei prossimi
+account/servizi (CookieYes, Vercel) guidato passo-passo fase per fase.
 
 | Fase | Cosa include | Stato |
 |---|---|---|
 | 1. Struttura file e schemi dati | `package.json`, `tailwind.config.ts`, `lib/schema.ts`, `lib/design-tokens.ts`, `content/questionnaire.ts` | ✅ Fatto (Cowork) |
 | 2. UI/UX | `app/`, `components/` — form una domanda per volta, progress bar, keyboard nav | ✅ Fatto (Claude Code) |
-| 3. API e integrazioni | `app/api/submit/route.ts`, Google Sheets ✅, email (Nodemailer/Gmail SMTP) ✅, upload Drive ⬜ | 🟡 In corso |
+| 3. API e integrazioni | `app/api/submit/route.ts`, Google Sheets ✅, email ✅, upload (allegati+link, niente Drive) ✅ | 🟡 In corso (privacy/cookie/deploy) |
 | 4. Setup account esterni | Vercel, Resend, Google Cloud Service Account, CookieYes (azioni manuali dell'utente, non di Claude Code) | ⬜ Da fare |
 
 ---
@@ -292,3 +294,57 @@ originale**: niente Resend.
 
 Non ancora fatto: upload file reale su Drive, pagina privacy, CookieYes, deploy —
 vedi piano per l'ordine.
+
+**2026-07-23 — Claude Code** — Implementata la Fase 3 del piano: upload file.
+**Deviazione dal piano originale**: niente Google Drive.
+
+- In chat l'utente ha chiesto se allegare i file via email invece di Drive fosse
+  fattibile, con un tetto tipo "2 allegati sotto 2MB". Confermato fattibile col
+  vincolo che il tetto dev'essere **globale su tutta la submission** (non per
+  singolo campo upload): il body di una funzione serverless è limitato a
+  ~4.5MB sull'intera richiesta, e i campi upload nello schema sono 3
+  (`loghiRiferimento`, `stiliDaEvitare`, `assetEsistenti`) — un tetto "2×2MB"
+  per ciascuno avrebbe potuto sommare fino a 12MB.
+- Decisione finale (dall'utente): **entrambe le opzioni disponibili sullo stesso
+  campo** — allegato diretto (max 2 file totali, 2MB ciascuno, solo su email
+  interna) per file piccoli, link incollato (Drive personale del cliente,
+  WeTransfer, SwissTransfer, Pinterest, ecc.) senza limiti per file più grandi o
+  numerosi. Questo elimina completamente la necessità di Google Drive/API
+  aggiuntive: nessun nuovo setup esterno richiesto per questa fase.
+- Nuovo `lib/attachment-limits.ts`: costanti condivise client+server (max 2
+  file, 2MB, tipi ammessi JPG/PNG/WEBP/SVG/PDF) — stessa fonte per validazione
+  UI immediata e ri-validazione server (mai fidarsi solo del client).
+- Nuovo `components/questionnaire/AttachmentsContext.tsx`: stato allegati e
+  tetto globale via React Context invece di prop-drilling attraverso
+  `QuestionCard`/`FieldRenderer`, che restano dispatcher generici.
+- `UploadLinkField.tsx`: aggiunta area "allega file" accanto al link esistente,
+  con contatore condiviso tra i 3 campi upload e messaggio chiaro quando il
+  tetto globale è raggiunto ("usa un link per altri file").
+- `content/questionnaire.ts`: testo guida delle 3 domande upload aggiornato per
+  indicare esplicitamente formati e limiti ammessi (richiesto esplicitamente
+  dall'utente, non lasciarlo solo nella UI del componente).
+- `QuestionnaireWizard.handleSubmit`: da JSON a `FormData` (dati + eventuali file
+  allegati in un'unica richiesta multipart a `/api/submit`).
+- `app/api/submit/route.ts`: da `request.json()` a `request.formData()`,
+  ri-validazione server-side di tipo/size/conteggio allegati.
+- `lib/mailer.tsx`: `sendInternalSummaryEmail` ora accetta e allega i file
+  (solo sull'email interna, mai su quella cliente). `lib/google-sheets.ts`:
+  le colonne "note" dei 3 campi upload segnalano il nome dei file allegati via
+  email quando presenti (i file non finiscono mai come colonna/link su Sheets).
+- **Due bug trovati e corretti testando in browser reale** (non solo via API
+  diretta): (1) `lib/validate-step.ts` considerava obbligatorio-non-soddisfatto
+  un campo upload anche con un allegato valido, perché controllava solo
+  `urls`/`note` e non sapeva nulla degli allegati — corretto passando
+  `hasAttachment` a `validateStep`; (2) allegare un file senza mai toccare
+  l'input link lasciava `answers[fieldId]` `undefined`, facendo fallire la
+  validazione Zod finale con l'errore generico "Required" al momento
+  dell'invio — corretto chiamando `onChange(value)` anche quando si allega un
+  file, per registrare comunque il valore (anche di default) nello stato.
+- Verificato end-to-end in browser reale (Playwright) con un file vero
+  allegato: submission riuscita (200 `{ok:true}`), nota corretta su Sheets
+  ("+ 1 allegati email: test-logo.png"), nessun errore nei log del server.
+  Riga di test rimossa da Sheets dopo la verifica.
+- `CLAUDE.md` aggiornato: rimossi tutti i riferimenti a Google Drive
+  dell'integrazione upload.
+
+Non ancora fatto: pagina privacy, CookieYes, deploy — vedi piano per l'ordine.
