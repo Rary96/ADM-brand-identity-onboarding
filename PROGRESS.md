@@ -8,18 +8,19 @@ voci passate. Lo stato in cima ("Stato attuale") va invece tenuto aggiornato.
 
 ## Stato attuale
 
-**Fase**: 3/4 in corso — **Google Sheets funzionante**: submit reale scrive una riga
-su Google Sheets (validazione Zod server-side, `app/api/submit/route.ts`), testato
-end-to-end sia via chiamata diretta all'API sia via browser reale. Restano da fare,
-nell'ordine concordato: Email (Resend) → Upload file reale (Drive) → Privacy/Cookie
-→ Deploy. Setup dei prossimi account esterni (Resend, poi Drive, CookieYes, Vercel)
+**Fase**: 3/4 in corso — **Google Sheets ed Email funzionanti**: ogni submission
+reale scrive una riga su Google Sheets e invia due email (riepilogo interno +
+conferma cliente) via Nodemailer/Gmail SMTP, non Resend (vedi Log per il perché).
+Testato end-to-end sia via chiamata diretta all'API sia via browser reale. Restano
+da fare, nell'ordine concordato: Upload file reale (Drive) → Privacy/Cookie →
+Deploy. Setup dei prossimi account/servizi (Google Drive API, CookieYes, Vercel)
 guidato passo-passo fase per fase, non tutto insieme.
 
 | Fase | Cosa include | Stato |
 |---|---|---|
 | 1. Struttura file e schemi dati | `package.json`, `tailwind.config.ts`, `lib/schema.ts`, `lib/design-tokens.ts`, `content/questionnaire.ts` | ✅ Fatto (Cowork) |
 | 2. UI/UX | `app/`, `components/` — form una domanda per volta, progress bar, keyboard nav | ✅ Fatto (Claude Code) |
-| 3. API e integrazioni | `app/api/submit/route.ts`, Google Sheets, upload Drive, Resend + React Email | ⬜ Da fare |
+| 3. API e integrazioni | `app/api/submit/route.ts`, Google Sheets ✅, email (Nodemailer/Gmail SMTP) ✅, upload Drive ⬜ | 🟡 In corso |
 | 4. Setup account esterni | Vercel, Resend, Google Cloud Service Account, CookieYes (azioni manuali dell'utente, non di Claude Code) | ⬜ Da fare |
 
 ---
@@ -246,3 +247,48 @@ Google Sheets reale, prima parte funzionante dello Step 3/4.
 
 Non ancora fatto: email (Resend), upload file reale su Drive, pagina privacy,
 CookieYes, deploy — vedi piano per l'ordine.
+
+**2026-07-23 — Claude Code** — Implementata la Fase 2 del piano: invio email
+reale, seconda parte funzionante dello Step 3/4. **Deviazione dal piano
+originale**: niente Resend.
+
+- In chat è emerso che l'utente non ha un dominio da verificare (necessario per
+  Resend) e non vuole comprarne uno solo per questo. Valutate tre alternative:
+  EmailJS (scartato: pensato per invio lato client, tier gratuito 200
+  richieste/mese troppo piccolo per uso server-side); Gmail API via OAuth2
+  (scartato: per app non verificate da Google il refresh token scade dopo 7
+  giorni, rischio concreto per un invio automatico senza manutenzione);
+  **Nodemailer + SMTP Gmail con App Password** (scelto: nessun dominio,
+  nessun OAuth/scadenza, invia a qualsiasi destinatario da subito, zero servizi
+  terzi in più oltre Google che già si usa per Sheets/Drive). Limite noto e
+  accettato: ~500 email/giorno (account Gmail gratuito), ben oltre il volume di
+  questo form. **Se in futuro serve un volume di invii molto più alto, Resend
+  torna la scelta più adatta** — da rivalutare solo allora.
+- Mittente: `dalmontearianna.96@gmail.com` (App Password generata dall'utente,
+  ricevuta in chat e scritta solo in `.env.local`, mai altrove).
+- `package.json`: rimossa la dipendenza `resend`, aggiunte `nodemailer` e
+  `@react-email/render` (esplicita, prima solo transitiva).
+- Nuovo `lib/email-sections.ts`: costruisce la struttura sezione→campi per il
+  riepilogo email iterando `content/questionnaire.ts` (stessa fonte della UI),
+  omette i facoltativi vuoti — si aggiorna da solo se cambia una domanda.
+- Nuovo `emails/` (React Email): `components/EmailLayout.tsx` e
+  `components/SectionBlock.tsx` condivisi, `InternalSummaryEmail.tsx` (riepilogo
+  completo a `dalmontearianna.96@gmail.com`), `ClientConfirmationEmail.tsx`
+  (ringraziamento breve, copy riusata da `outroCopy` in
+  `content/questionnaire.ts`, non il dump completo).
+- Nuovo `lib/mailer.tsx` (estensione `.tsx` perché contiene JSX): trasporto
+  Nodemailer su `smtp.gmail.com`, `sendInternalSummaryEmail` e
+  `sendClientConfirmationEmail`.
+- `app/api/submit/route.ts`: dopo la scrittura su Sheets, invio delle due email
+  **best-effort** via `Promise.allSettled` — un errore di invio viene solo
+  loggato server-side, la risposta al client resta positiva perché i dati sono
+  comunque salvati (stessa filosofia già decisa nel piano).
+- `CLAUDE.md` e `PROGRESS.md` (questo file) aggiornati per riflettere il cambio
+  Resend → Nodemailer/Gmail SMTP.
+- Verificato end-to-end: submission di test via API diretta con `dalmontearianna.96@gmail.com`
+  come destinatario cliente (per poter controllare la ricezione), nessun errore
+  nei log del server (entrambi gli invii SMTP completati). Riga di test rimossa
+  da Sheets dopo la verifica.
+
+Non ancora fatto: upload file reale su Drive, pagina privacy, CookieYes, deploy —
+vedi piano per l'ordine.

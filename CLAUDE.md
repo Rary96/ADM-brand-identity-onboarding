@@ -17,7 +17,10 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   - Google Sheets API (via Service Account) — salvataggio risposte
   - Google Drive API (stesso Service Account) — upload file/immagini di riferimento,
     link salvato nella riga corrispondente su Sheets
-  - Resend + React Email — invio notifiche
+  - Nodemailer via SMTP Gmail (App Password) + React Email per il markup — invio
+    notifiche. Non Resend: niente dominio da verificare, niente OAuth/refresh
+    token da rinnovare (vedi decisione sotto). Se il volume di invii dovesse
+    crescere molto, Resend torna la scelta più adatta — da rivalutare allora.
   - CookieYes — banner cookie/consenso
   - Zod — validazione dati, sia client-side che server-side
 
@@ -51,9 +54,15 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   accento limitato (progress bar, focus ring, pulsante primario, dettagli). Sfondo e
   testo restano neutri (bianco/grigi) per non influenzare le risposte estetiche del
   cliente, come fa Typeform. Vedi `lib/design-tokens.ts` per la palette completa.
-- **Notifiche email (Resend)**: doppio invio a ogni submission —
+- **Notifiche email**: doppio invio a ogni submission —
   1. riepilogo completo a `dalmontearianna.96@gmail.com`
   2. email di conferma/ringraziamento al cliente (indirizzo dal campo `email` del form)
+  Invio via Nodemailer + SMTP Gmail (App Password su `dalmontearianna.96@gmail.com`),
+  non Resend: valutato anche EmailJS (pensato per invio lato client, tier gratuito
+  troppo piccolo) e Gmail API via OAuth2 (refresh token che scade dopo 7 giorni per
+  app non verificate — rischio operativo per un invio automatico senza
+  manutenzione). App Password: nessun dominio da verificare, invia a qualsiasi
+  destinatario da subito. Vedi `lib/mailer.tsx`.
 - **Contenuto del questionario**: 24 domande su 9 sezioni (una per pagina), solo 7
   obbligatorie a livello strategico (nome azienda, email, storia/feedback attuale,
   valori, USP, cliente ideale, competitor). Tutto il resto è facoltativo per ridurre
@@ -109,57 +118,46 @@ onboarding-brand-identity/
 
 Repo GitHub collegato: `Rary96/ADM-brand-identity-onboarding` (branch `main`).
 
-**Step 1/3 (dati) e Step 2/3 (UI/UX) completati.** L'invio del form al momento è uno
-STUB: `QuestionnaireWizard.handleSubmit` valida con `questionarioSchema` e fa solo
-`console.log(result.data)` — nessuna scrittura reale su Sheets/Drive, nessuna email.
+**Step 1/3 (dati) e Step 2/3 (UI/UX) completati. Step 3/3 (API) in corso:**
+`app/api/submit/route.ts` valida con `questionarioSchema` server-side, scrive
+davvero su Google Sheets (`lib/google-sheets.ts`) e invia le due email via
+Nodemailer/Gmail SMTP (`lib/mailer.tsx`) — funzionante e testato end-to-end.
+`QuestionnaireWizard.handleSubmit` chiama l'API reale, non più `console.log`.
 
-## Cosa manca per far funzionare davvero l'invio (Step 3/3 — API)
+## Cosa manca ancora per completare l'invio (Step 3/3 — API)
 
-In ordine consigliato:
+Fatto: Google Sheets, email (riepilogo interno + conferma cliente). Ordine
+consigliato per il resto:
 
-1. **Setup Google Cloud** (lato utente, non codice): creare/riusare un progetto GCP,
-   abilitare Google Sheets API + Google Drive API, creare un Service Account e
-   generarne la chiave JSON.
-2. **Google Sheet di destinazione**: crearlo, condividerlo (ruolo Editor) con l'email
-   del Service Account, recuperare lo Sheet ID.
-3. **Cartella Google Drive di destinazione** per gli allegati: crearla, condividerla
-   con lo stesso Service Account, recuperare il Folder ID.
-4. **Account Resend**: dominio mittente verificato + API key; decidere l'indirizzo
-   `RESEND_FROM_EMAIL`.
-5. **`app/api/submit/route.ts`**: ri-validare il payload con `questionarioSchema`
-   lato server (mai fidarsi solo del client), scrivere la riga su Google Sheets,
-   caricare gli allegati su Drive, inviare le due email via Resend, rispondere
-   con esito ok/errore.
-6. **`emails/`**: due template React Email — riepilogo interno (a
-   `dalmontearianna.96@gmail.com`) e conferma/ringraziamento al cliente (indirizzo
-   preso dal campo `email` del form).
-7. **Collegare il frontend**: `QuestionnaireWizard.handleSubmit` deve chiamare
-   `fetch("/api/submit", ...)` al posto del `console.log` attuale, e gestire davvero
-   gli errori di rete/server (oggi mostra solo errori di validazione locale).
-8. **Upload file reale** (gap noto): oggi i campi `loghiRiferimento`,
+1. **Upload file reale** (gap noto): oggi i campi `loghiRiferimento`,
    `stiliDaEvitare`, `assetEsistenti` accettano SOLO link incollati
-   (`UploadLinkField`), non ancora un vero upload da file system. Va aggiunta una UI
-   drag-and-drop/file-picker che mandi i file al server prima che possano finire su
-   Drive — il link resta comunque come alternativa, come da decisione originale.
-9. **Pagina informativa privacy**: intro e step di consenso citano già
+   (`UploadLinkField`), non ancora un vero upload da file system. Serve
+   `app/api/upload/route.ts` (Google Drive API, stesso Service Account già usato
+   per Sheets — va solo abilitata l'API e creata/condivisa la cartella
+   destinazione) + una UI drag-and-drop/file-picker — il link resta comunque come
+   alternativa, come da decisione originale.
+2. **Pagina informativa privacy**: intro e step di consenso citano già
    "l'informativa privacy" ma non esiste ancora una pagina/link reale — necessaria
-   prima di raccogliere dati veri (GDPR).
-10. **CookieYes**: script nel layout + banner cookie, variabile
-    `NEXT_PUBLIC_COOKIEYES_ID`.
-11. **Variabili d'ambiente su Vercel** (vedi sezione sotto) + deploy + test end-to-end
-    in produzione con un invio reale.
+   prima di raccogliere dati veri (GDPR). L'utente ha un testo esistente sul sito
+   principale ADM da adattare.
+3. **CookieYes**: script nel layout + banner cookie, variabile
+   `NEXT_PUBLIC_COOKIEYES_ID`.
+4. **Deploy su Vercel**: collegare il repo, impostare le env var (vedi sotto),
+   test end-to-end in produzione con un invio reale.
 
 ## Variabili d'ambiente richieste (da configurare su Vercel, non nel codice)
 
 ```
-GOOGLE_SERVICE_ACCOUNT_EMAIL=
-GOOGLE_PRIVATE_KEY=
-GOOGLE_SHEET_ID=
-GOOGLE_DRIVE_FOLDER_ID=
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=
-NEXT_PUBLIC_COOKIEYES_ID=
+GOOGLE_SERVICE_ACCOUNT_EMAIL=      # fatto, in .env.local
+GOOGLE_PRIVATE_KEY=                # fatto, in .env.local
+GOOGLE_SHEET_ID=                   # fatto, in .env.local
+GOOGLE_DRIVE_FOLDER_ID=            # da fare (Fase upload file)
+GMAIL_USER=                        # fatto, in .env.local (dalmontearianna.96@gmail.com)
+GMAIL_APP_PASSWORD=                # fatto, in .env.local
+NEXT_PUBLIC_COOKIEYES_ID=          # da fare (Fase privacy/cookie)
 ```
 
-Questi valori li genera/recupera l'utente (login Google Cloud Console, Resend,
-Vercel, CookieYes) — non vanno inventati né richiesti come input di codice.
+Questi valori li genera/recupera l'utente (login Google Cloud Console, Google
+Account, Vercel, CookieYes) — non vanno inventati né richiesti come input di
+codice. Quelli già raccolti vivono solo in `.env.local` (gitignored) in locale;
+su Vercel andranno impostati come Environment Variables al momento del deploy.

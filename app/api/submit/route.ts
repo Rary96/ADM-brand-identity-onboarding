@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { questionarioSchema } from "@/lib/schema";
 import { appendSubmissionRow } from "@/lib/google-sheets";
+import { sendInternalSummaryEmail, sendClientConfirmationEmail } from "@/lib/mailer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +34,16 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // Le email sono best-effort: i dati sono già salvati su Sheets, un errore
+  // qui non deve far percepire l'invio come fallito all'utente.
+  const emailResults = await Promise.allSettled([
+    sendInternalSummaryEmail(result.data, meta.submissionId),
+    sendClientConfirmationEmail(result.data),
+  ]);
+  emailResults.forEach((r) => {
+    if (r.status === "rejected") console.error("Errore invio email:", r.reason);
+  });
 
   return NextResponse.json({ ok: true });
 }
