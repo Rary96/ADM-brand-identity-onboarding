@@ -10,8 +10,11 @@ voci passate. Lo stato in cima ("Stato attuale") va invece tenuto aggiornato.
 
 **Fase**: 2/4 completata — UI/UX multi-step funzionante (submit ancora uno STUB:
 valida con Zod e fa `console.log`, nessuna scrittura reale su Sheets/Drive/email).
-**Prossimo step**: API e integrazioni (Step 3) — vedi checklist dettagliata in
-`CLAUDE.md` ("Cosa manca per far funzionare davvero l'invio").
+**Prossimo step**: API e integrazioni (Step 3) — piano tecnico dettagliato pronto
+(vedi Log 2026-07-23 sotto), non ancora implementato. Ordine concordato con
+l'utente: **Sheets → Email → Upload file → Privacy/Cookie → Deploy**, con setup
+degli account esterni (Google Cloud, Resend, CookieYes, Vercel) guidato passo-passo
+fase per fase, non tutto insieme.
 
 | Fase | Cosa include | Stato |
 |---|---|---|
@@ -175,6 +178,41 @@ obbligatorio). L'invio del form resta uno STUB (valida con `questionarioSchema` 
 `console.log`, nessuna scrittura reale). Aggiornato `CLAUDE.md` con lo stato reale
 del progetto e la checklist ordinata per lo Step 3 (API).
 
-<!-- Claude Code: aggiungi qui sotto le prossime voci, formato:
-**AAAA-MM-GG — Claude Code** — cosa è stato fatto, decisioni prese, eventuali problemi
-aperti. -->
+**2026-07-23 — Claude Code** — Pianificazione dettagliata dello Step 3/4 (API e
+integrazioni), nessun codice scritto in questa sessione. Decisioni chiave del piano:
+
+- **Upload separato dal submit**: `app/api/upload/route.ts` (un file per chiamata,
+  multipart) distinto da `app/api/submit/route.ts` (solo JSON leggero) — le
+  Serverless Function Vercel hanno un limite ~4.5MB sul body, un unico POST con
+  tutto il questionario + file reali lo supererebbe. L'URL Drive risultante
+  dall'upload finisce nello stesso array `urls` già usato dai link incollati:
+  **zero modifiche a `lib/schema.ts`**.
+- **Google Sheets**: un tab `Risposte`, append-only (`values.append`), una colonna
+  per ogni sotto-campo degli oggetti annidati, array serializzati con `join(", ")`,
+  enum tradotti nelle label italiane già presenti in `content/questionnaire.ts`
+  (stessa fonte della UI), più una colonna finale con il JSON completo come rete di
+  sicurezza. Dettaglio completo (50 colonne) nel piano tecnico salvato a parte.
+- **Google Drive**: una sottocartella per submission (creata al volo al primo
+  upload, id tenuto in state React), permesso `reader`/`anyone` sui file caricati
+  così i link su Sheets/email sono apribili senza login. Nota operativa: la
+  cartella di destinazione va creata da un account Google reale (non dal Service
+  Account, che non ha quota di storage propria) e condivisa come Editor col
+  Service Account.
+- **Filosofia errori**: Sheets è la fonte di verità (se fallisce, 500 e l'utente
+  può ripremere "Invia" senza perdere le risposte già compilate); le due email
+  Resend sono best-effort via `Promise.allSettled` — se falliscono si logga
+  server-side ma la risposta al client resta positiva, perché i dati sono comunque
+  salvati.
+- **Email**: template React Email in `emails/`, contenuto costruito da una
+  funzione condivisa che itera `content/questionnaire.ts` (si aggiornano da soli
+  se cambia una domanda), riepilogo completo interno + conferma breve al cliente
+  (non il dump completo, per non essere invadenti).
+- **Ordine di implementazione concordato con l'utente**: Sheets → Email → Upload
+  file reale → Privacy policy (testo esistente ADM da adattare) + CookieYes →
+  Deploy su Vercel. Ogni fase con setup account esterno parte con istruzioni
+  passo-passo prima di scrivere codice; credenziali solo in `.env.local`
+  (gitignored) e Vercel Environment Variables, mai nel codice.
+
+Piano tecnico completo (mapping colonne Sheets campo-per-campo, pseudocodice delle
+route API, struttura file `emails/`) salvato anche come plan file Claude Code
+locale — se non più disponibile, questo log è sufficiente per ricostruirlo.
