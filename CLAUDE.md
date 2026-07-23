@@ -177,6 +177,26 @@ zero come richieste separate — non c'è una checklist residua da questo piano.
 Non in scope (deciso, non ridiscutere senza motivo): banner cookie/CookieYes —
 vedi voce dedicata sopra in "Cosa è già stato deciso".
 
+## Workflow post-deploy: issue tracking e branching
+
+Decisione presa il 2026-07-23, ora che il progetto è live in produzione:
+
+- **Interventi futuri (revisioni, bug, nuove feature) si tracciano come GitHub
+  Issue** sul repo `Rary96/ADM-brand-identity-onboarding`, non solo a voce o in
+  `doc/PROGRESS.md`. `PROGRESS.md` resta il log narrativo del "perché" delle
+  decisioni già prese; le Issue sono la checklist operativa di cosa è ancora
+  da fare.
+- **Ogni intervento non banale si sviluppa su un branch dedicato**, merge in
+  `main` solo a lavoro completato/testato — non più commit diretti su `main`
+  come nella fase di sviluppo iniziale. Motivo: `main` è collegato al deploy
+  automatico su Vercel (push → redeploy in produzione), quindi un push diretto
+  di una modifica a metà (es. un restyling parziale) romperebbe il sito live.
+- Issue aperte alla data di questa decisione (prima infornata di interventi
+  segnalati dall'utente): revisione domande del questionario (forma e
+  contenuto), UX degli stati d'errore dei componenti, copy/UI delle email,
+  UI visiva generale, conversione responsive mobile, inserimento loghi brand
+  ADM. Vedi le Issue su GitHub per il dettaglio, non duplicarle qui.
+
 ## Variabili d'ambiente (impostate su Vercel, Production e Preview)
 
 ```

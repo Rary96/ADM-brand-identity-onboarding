@@ -495,3 +495,24 @@ Privacy → Deploy) sono tutte completate e verificate, comprese le tre
 deviazioni concordate lungo il percorso (niente Resend, niente Google Drive,
 niente CookieYes — vedi voci di Log precedenti per il dettaglio di ciascuna).
 Il questionario è pubblicamente raggiungibile e funzionante.
+
+**2026-07-23 — Claude Code** — Decisione di workflow post-deploy: issue
+tracking su GitHub + branch per gli interventi futuri.
+
+- Ora che il progetto è live, l'utente ha chiesto dove tracciare i prossimi
+  interventi (revisioni, bug, nuove feature) via via che li nota usando il
+  form in produzione. Deciso: **GitHub Issue** sul repo, non solo annotazioni
+  a voce o in questo file — le Issue si etichettano, chiudono e referenziano
+  nei commit/PR, `PROGRESS.md` resta il log del "perché" delle decisioni
+  prese, non la checklist di cosa resta da fare.
+- Aperte le prime 6 Issue su `Rary96/ADM-brand-identity-onboarding`: revisione
+  domande del questionario (forma e contenuto), UX degli stati d'errore dei
+  componenti, copy/UI delle email, UI visiva generale, conversione responsive
+  mobile, inserimento loghi brand ADM.
+- Deciso anche il workflow git per questi interventi: **branch dedicato per
+  ogni intervento non banale**, merge in `main` solo a lavoro
+  completato/testato. Prima del deploy si lavorava direttamente su `main`;
+  ora `main` triggera un redeploy automatico su Vercel ad ogni push, quindi un
+  push diretto di una modifica a metà romperebbe il sito in produzione.
+- `CLAUDE.md` aggiornato con una nuova sezione "Workflow post-deploy: issue
+  tracking e branching" che documenta entrambe le decisioni.
