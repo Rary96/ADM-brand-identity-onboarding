@@ -23,12 +23,11 @@ interface FieldRendererProps {
   question: StepQuestion;
   value: unknown;
   onChange: (value: unknown) => void;
-  onSubmit: () => void;
 }
 
 const formatiSuggestions = ["AI/EPS vettoriale", "PNG trasparente", "PDF", "Favicon", "Firma email"];
 
-export function FieldRenderer({ question, value, onChange, onSubmit }: FieldRendererProps) {
+export function FieldRenderer({ question, value, onChange }: FieldRendererProps) {
   switch (question.id) {
     case "valori":
     case "canaliVendita": {
@@ -116,7 +115,6 @@ export function FieldRenderer({ question, value, onChange, onSubmit }: FieldRend
         <TextShortField
           value={(value as string) ?? ""}
           onChange={onChange}
-          onSubmit={onSubmit}
         />
       );
     case "text-long":
@@ -126,7 +124,6 @@ export function FieldRenderer({ question, value, onChange, onSubmit }: FieldRend
         <EmailFieldInput
           value={(value as string) ?? ""}
           onChange={onChange}
-          onSubmit={onSubmit}
         />
       );
     case "single-choice":

@@ -63,7 +63,6 @@ export function QuestionCard({
           onChange(v);
           if (autoAdvance) onNext(v);
         }}
-        onSubmit={() => onNext()}
       />
 
       {error && (
@@ -104,9 +103,6 @@ export function QuestionCard({
           </button>
         </div>
       </div>
-      {(question.type === "text-short" || question.type === "email") && (
-        <p className="text-xs text-neutral-300">Premi Invio ↵</p>
-      )}
     </motion.div>
   );
 }

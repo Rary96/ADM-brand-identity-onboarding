@@ -43,9 +43,9 @@ export const colors = {
 
 export const fonts = {
   // Font sans neutro e leggibile, coerente con un tono "pulito" e non decorativo
-  sans: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  sans: "'Montserrat', ui-sans-serif, system-ui, sans-serif",
   // Font per numeri/step (progress "3 / 9") — stesso family, peso diverso
-  mono: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  mono: "'Montserrat', ui-sans-serif, system-ui, sans-serif",
 } as const;
 
 export const radii = {

@@ -1,7 +1,7 @@
 # Progetto: Questionario Onboarding — Brand Identity & Logo Design
 
 Modulo di onboarding clienti stile Typeform: transizioni fluide una domanda alla volta,
-barra di progresso, UI curata e responsive, supporto tastiera (Invio/Enter).
+barra di progresso, UI curata e responsive.
 
 ## Ruolo
 
@@ -41,6 +41,15 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
 
 ## Cosa è già stato deciso (non ridiscutere senza motivo)
 
+- **Font**: Montserrat (Google Fonts), non più Inter — vedi `app/layout.tsx`
+  e `lib/design-tokens.ts` (`fonts.sans`/`fonts.mono`).
+- **Navigazione tra domande: solo bottone, niente scorciatoia Invio/Enter**.
+  Rimosso l'hint "Premi Invio ↵" e l'`onKeyDown` che avanzava alla domanda
+  successiva su `text-short`/`email` (`QuestionCard.tsx`,
+  `FieldRenderer.tsx`, `SimpleFields.tsx`) — deciso il 2026-07-24 per
+  coerenza con tutti gli altri tipi di campo, dove Invio ha altri usi
+  (es. aggiungere un chip in `ChipsField`) o nessuno. Non reintrodurlo senza
+  che l'utente lo richieda esplicitamente.
 - **Branching nuovo brand / restyling**: una domanda iniziale in Sezione 2
   (`tipoProgetto`) mostra domande diverse a seconda del caso — vedi
   `lib/schema.ts` (superRefine) e `content/questionnaire.ts` (`visibleIf`).

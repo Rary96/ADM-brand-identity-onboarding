@@ -9,11 +9,10 @@ import type { Question } from "@/content/questionnaire";
 interface TextFieldProps {
   value: string;
   onChange: (value: string) => void;
-  onSubmit?: () => void;
   placeholder?: string;
 }
 
-export function TextShortField({ value, onChange, onSubmit, placeholder }: TextFieldProps) {
+export function TextShortField({ value, onChange, placeholder }: TextFieldProps) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => ref.current?.focus(), []);
   return (
@@ -22,15 +21,12 @@ export function TextShortField({ value, onChange, onSubmit, placeholder }: TextF
       value={value ?? ""}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onSubmit?.();
-      }}
       className="h-14 border-0 border-b-2 border-neutral-200 rounded-none px-1 text-xl focus-visible:ring-0 focus-visible:border-accent-400"
     />
   );
 }
 
-export function EmailFieldInput({ value, onChange, onSubmit, placeholder }: TextFieldProps) {
+export function EmailFieldInput({ value, onChange, placeholder }: TextFieldProps) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => ref.current?.focus(), []);
   return (
@@ -40,9 +36,6 @@ export function EmailFieldInput({ value, onChange, onSubmit, placeholder }: Text
       value={value ?? ""}
       placeholder={placeholder ?? "nome@azienda.it"}
       onChange={(e) => onChange(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onSubmit?.();
-      }}
       className="h-14 border-0 border-b-2 border-neutral-200 rounded-none px-1 text-xl focus-visible:ring-0 focus-visible:border-accent-400"
     />
   );
