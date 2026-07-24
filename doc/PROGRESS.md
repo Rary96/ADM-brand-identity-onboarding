@@ -516,3 +516,79 @@ tracking su GitHub + branch per gli interventi futuri.
   push diretto di una modifica a metà romperebbe il sito in produzione.
 - `CLAUDE.md` aggiornato con una nuova sezione "Workflow post-deploy: issue
   tracking e branching" che documenta entrambe le decisioni.
+
+**2026-07-24 — Claude Code** — Revisione domande e copy del questionario
+(Issue [#8](https://github.com/Rary96/ADM-brand-identity-onboarding/issues/8),
+branch `content/copy-tone-revision`).
+
+- Punto di partenza: richiesta esplicita dell'utente di valutare se le 24
+  domande fossero adatte alla raccolta info per una brand identity (nuova o
+  restyling), se convertire alcune domande aperte in chiuse, e di rivedere
+  il copy verso un tono professionale ma colloquiale, con una pagina di
+  presentazione più ricca prima del click di inizio e la possibilità di
+  riprendere il nome dell'azienda del cliente nel copy successivo.
+- **Split `aziendaReferente` → `nomeAzienda` + `referente`** (`lib/schema.ts`,
+  `content/questionnaire.ts`): il campo combinato impediva sia la
+  personalizzazione pulita del copy sia un saluto corretto nell'email di
+  conferma cliente (produceva letteralmente "Ciao, Studio Rossi Srl —
+  referente: Marco Rossi, titolare,"). `nomeAzienda` resta tra le 7 domande
+  strategiche obbligatorie al posto del vecchio campo combinato;
+  `referente` è facoltativo.
+- **Gap schema↔contenuto risolto**: `archetipoMotivazione` esisteva in
+  `lib/schema.ts` ma non aveva una domanda corrispondente in
+  `content/questionnaire.ts`. Aggiunta come follow-up facoltativo subito
+  dopo `archetipo`.
+- **3 nuove domande** (tutte facoltative, per non alzare l'attrito):
+  `namingStatus` (solo nuovo brand — se il nome è già definitivo prima di
+  disegnarci un logotipo attorno), `decisorFinale` (chi dà l'ok finale, per
+  ridurre revisioni tardive per pareri non sentiti prima), `payoffTagline`
+  (se serve anche un payoff sotto il logo).
+- **`supportiEVincoli.supporti` e `formatiRichiesti` da chip a testo libero a
+  multi-select chiuso + "altro"** (nuovo `PillMultiSelectField` +
+  `Textarea` per l'eccezione): a differenza di `valori`/`canaliVendita`
+  (rimasti chip liberi, decisione 2026-07-23 confermata valida — sono
+  intrinsecamente specifici di ogni azienda), supporti d'uso del logo e
+  formati file alla consegna sono enumerabili in modo pressoché universale
+  in un progetto di identità — il multi-select riduce l'attrito e garantisce
+  che il designer riceva sempre l'informazione tecnica completa. Opzioni
+  scelte in continuità con i suggerimenti chip già in uso in produzione.
+  Conferma esplicita richiesta e ottenuta dall'utente prima di introdurre
+  questa nuova tassonomia (coerente con la regola già in CLAUDE.md di non
+  inventarne senza chiedere).
+- **Tono di voce**: tra le opzioni proposte (Arianna in prima persona / il
+  brand del cliente al centro / registro attuale solo più caldo), l'utente
+  ha scelto **il brand del cliente al centro** — bottone intro "Diamo forma
+  al tuo brand" invece di "Inizia", intro page arricchita con 3 punti che
+  spiegano cosa succede alle risposte e dopo l'invio.
+- **Personalizzazione**: nuovo `lib/personalize.ts`, interpolazione del
+  token `{{azienda}}` nei testi di sezione (`section.intro` — prima
+  calcolato in `lib/questionnaire-steps.ts` come `sectionIntro` ma mai
+  renderizzato in UI, ora mostrato in `QuestionCard.tsx` sotto il titolo di
+  sezione), in `midFormReminder` e in `outroCopy`. Deliberatamente *non*
+  applicata a ogni singola domanda (era "ogni tanto" nella richiesta
+  dell'utente, non sistematica) per non diventare ripetitiva.
+- **Email adattate allo stesso tono**: `ClientConfirmationEmail.tsx` ora
+  saluta per nome di battesimo estratto da `referente` (fallback su
+  `nomeAzienda` se assente) invece del campo combinato rotto, e riusa lo
+  stesso `outroCopy` personalizzato dell'outro screen (`personalize()`) così
+  UI ed email restano sempre allineate. `InternalSummaryEmail.tsx` mette
+  `nomeAzienda` nel titolo.
+- **Testato end-to-end in locale** con uno script Playwright ad hoc (percorso
+  nuovo brand, dall'intro al consenso, inclusi i nuovi campi chiusi e la
+  domanda di branching `namingStatus`): nessun errore console, personalizzazione
+  verificata via screenshot ("Il cuore strategico di Studio Rossi."), toggle
+  dei nuovi multi-select chiusi verificato via classi CSS applicate al click.
+  `tsc --noEmit` e `next build` puliti.
+- **Regola di processo salvata in memoria** (non solo per questo progetto):
+  in ogni nuovo progetto, tono di voce e direzione del copy vanno definiti
+  esplicitamente *prima* di scrivere i testi, non a posteriori — per i siti
+  web, in questa fase va inclusa anche una ricerca SEO di base. Richiesto
+  esplicitamente dall'utente durante questa revisione, dopo aver notato che
+  il copy del questionario era stato scritto la prima volta senza una
+  direzione di tono dichiarata a monte.
+- **Azione manuale richiesta all'utente dopo il merge**: la riga header del
+  tab "Risposte" sul Google Sheet va aggiornata a mano per riflettere le
+  nuove colonne (`referente`, `namingStatus`, `supportiEVincoli.altro`,
+  `formatiRichiesti.altro`, `payoffTagline`, `decisorFinale`) — Claude Code
+  non ha modificato lo Sheet stesso, solo `lib/google-sheets.ts` che scrive
+  le righe.

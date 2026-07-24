@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { FieldRenderer } from "@/components/questionnaire/FieldRenderer";
 import type { StepQuestion } from "@/lib/questionnaire-steps";
 import { motion as motionTokens } from "@/lib/design-tokens";
+import { personalize } from "@/lib/personalize";
 import { cn } from "@/lib/utils";
 
 interface QuestionCardProps {
@@ -18,6 +19,7 @@ interface QuestionCardProps {
   canGoBack: boolean;
   error: string | null;
   autoAdvance: boolean;
+  nomeAzienda: string;
 }
 
 export function QuestionCard({
@@ -31,6 +33,7 @@ export function QuestionCard({
   canGoBack,
   error,
   autoAdvance,
+  nomeAzienda,
 }: QuestionCardProps) {
   return (
     <motion.div
@@ -43,9 +46,16 @@ export function QuestionCard({
     >
       <div className="flex flex-col gap-2">
         {question.isFirstOfSection && (
-          <p className="text-sm font-medium uppercase tracking-wide text-accent-600">
-            {question.sectionTitle}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium uppercase tracking-wide text-accent-600">
+              {question.sectionTitle}
+            </p>
+            {question.sectionIntro && (
+              <p className="text-sm text-neutral-400">
+                {personalize(question.sectionIntro, nomeAzienda)}
+              </p>
+            )}
+          </div>
         )}
         <div className="flex items-start justify-between gap-4">
           <h2 className="text-2xl font-semibold text-neutral-900 sm:text-3xl">

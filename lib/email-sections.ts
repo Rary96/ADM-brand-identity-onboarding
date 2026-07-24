@@ -32,6 +32,9 @@ function formatValue(question: Question, data: Questionario): string {
     case "tipologiaMarchio":
     case "budget":
     case "tipoProgetto":
+    case "namingStatus":
+    case "payoffTagline":
+    case "decisorFinale":
       return getOptionLabel(question.id, raw as string | undefined);
     case "mappaPosizionamento": {
       const v = raw as Questionario["mappaPosizionamento"];
@@ -71,12 +74,24 @@ function formatValue(question: Question, data: Questionario): string {
     case "supportiEVincoli": {
       const v = raw as Questionario["supportiEVincoli"];
       if (!v) return "";
-      return [join(v.supporti), v.vincoliTecnici ? `Vincoli: ${v.vincoliTecnici}` : ""]
+      return [
+        join(getOptionLabels("supportiEVincoli", v.supporti.selezionati)),
+        v.supporti.altro ? `Altro: ${v.supporti.altro}` : "",
+        v.vincoliTecnici ? `Vincoli: ${v.vincoliTecnici}` : "",
+      ]
         .filter(Boolean)
         .join(" · ");
     }
-    case "formatiRichiesti":
-      return join(raw as string[] | undefined);
+    case "formatiRichiesti": {
+      const v = raw as Questionario["formatiRichiesti"];
+      if (!v) return "";
+      return [
+        join(getOptionLabels("formatiRichiesti", v.selezionati)),
+        v.altro ? `Altro: ${v.altro}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    }
     case "scadenza": {
       const v = raw as Questionario["scadenza"];
       if (!v) return "";

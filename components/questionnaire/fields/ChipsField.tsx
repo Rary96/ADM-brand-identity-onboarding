@@ -18,9 +18,11 @@ interface ChipsFieldProps {
 
 /**
  * Input a "chip": digita e premi Invio (o virgola) per aggiungere un tag.
- * Usato per i campi array liberi dello schema (valori, canaliVendita,
- * supportiEVincoli.supporti, formatiRichiesti) — lo schema li accetta come
- * z.array(z.string()) senza enum fissa, quindi il testo libero è corretto.
+ * Usato per i campi array liberi dello schema (valori, canaliVendita) — lo
+ * schema li accetta come z.array(z.string()) senza enum fissa, in quanto
+ * intrinsecamente specifici di ogni azienda (a differenza di supportiEVincoli
+ * e formatiRichiesti, diventati multi-select chiuso + "altro" il 2026-07-24
+ * perché enumerabili in modo pressoché universale — vedi doc/PROGRESS.md).
  */
 export function ChipsField({
   values,

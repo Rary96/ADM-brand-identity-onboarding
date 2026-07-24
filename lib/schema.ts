@@ -11,8 +11,11 @@ import { z } from "zod";
  *   sia URL (link a Drive/Instagram/Pinterest) sia riferimenti a file caricati dal client
  *   (che verranno poi risolti in URL Google Drive lato server, step API).
  * - Solo 7 campi sono `required` a livello di contenuto strategico (vedi README):
- *   aziendaReferente, email, storiaFondativa/feedbackAttuale, valori, uspVendita,
+ *   nomeAzienda, email, storiaFondativa/feedbackAttuale, valori, uspVendita,
  *   clienteIdeale, competitor. Tutto il resto è facoltativo per ridurre l'abbandono.
+ *   `nomeAzienda` (ex `aziendaReferente`, splittato dal `referente` il 2026-07-24
+ *   per poterlo riprendere pulito nel copy personalizzato e nel saluto email —
+ *   vedi doc/PROGRESS.md).
  */
 
 export const tipoProgettoEnum = z.enum(["nuovo_brand", "restyling"]);
@@ -23,6 +26,16 @@ export const posizionamentoPrezzoEnum = z.enum([
   "premium",
   "lusso",
 ]);
+
+export const namingStatusEnum = z.enum([
+  "definitivo",
+  "da_validare",
+  "da_decidere_insieme",
+]);
+
+export const decisorFinaleEnum = z.enum(["solo_io", "io_piu_team", "comitato"]);
+
+export const payoffTaglineEnum = z.enum(["si", "no", "non_so"]);
 
 export const archetipoEnum = z.enum([
   "eroe",
@@ -54,7 +67,8 @@ const uploadOrLink = z.object({
 export const questionarioSchema = z
   .object({
     // Sezione 1 — Anagrafica e contatti
-    aziendaReferente: z.string().min(2, "Campo obbligatorio"),
+    nomeAzienda: z.string().min(2, "Campo obbligatorio"),
+    referente: z.string().optional(),
     email: z.string().email("Email non valida"),
     telefonoSito: z.string().optional(),
     settoreAnno: z.string().optional(),
@@ -62,6 +76,7 @@ export const questionarioSchema = z
     // Sezione 2 — Storia, Vision e Valori
     tipoProgetto: tipoProgettoEnum,
     storiaFondativa: z.string().optional(), // richiesto se tipoProgetto = nuovo_brand
+    namingStatus: namingStatusEnum.optional(), // solo tipoProgetto = nuovo_brand
     feedbackAttuale: z.string().optional(), // richiesto se tipoProgetto = restyling
     aggettivi: z.string().optional(), // 5 aggettivi, testo libero
     missioneVision: z.string().optional(),
@@ -126,13 +141,21 @@ export const questionarioSchema = z
     assetEsistenti: uploadOrLink.optional(), // required se restyling, vedi superRefine
     supportiEVincoli: z
       .object({
-        supporti: z.array(z.string()).default([]),
+        supporti: z.object({
+          selezionati: z.array(z.string()).default([]),
+          altro: z.string().optional(),
+        }),
         vincoliTecnici: z.string().optional(),
       })
       .optional(),
 
     // Sezione 9 — Deliverable, Tempistiche e Budget
-    formatiRichiesti: z.array(z.string()).default([]),
+    formatiRichiesti: z
+      .object({
+        selezionati: z.array(z.string()).default([]),
+        altro: z.string().optional(),
+      })
+      .default({ selezionati: [] }),
     scadenza: z
       .object({
         data: z.string().optional(),
@@ -140,6 +163,8 @@ export const questionarioSchema = z
       })
       .optional(),
     budget: budgetRangeEnum.optional(),
+    decisorFinale: decisorFinaleEnum.optional(),
+    payoffTagline: payoffTaglineEnum.optional(),
     domandaJolly: z.string().optional(),
 
     // Consenso privacy (obbligatorio, gestito separatamente da CookieYes per il banner)
@@ -188,7 +213,7 @@ export type Questionario = z.infer<typeof questionarioSchema>;
 
 /** Lista dei campi realmente obbligatori a livello di contenuto strategico (per UI: badge "obbligatoria"). */
 export const campiObbligatoriStrategici = [
-  "aziendaReferente",
+  "nomeAzienda",
   "email",
   "storiaFondativa_o_feedbackAttuale",
   "valori",

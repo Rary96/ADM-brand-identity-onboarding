@@ -1,33 +1,36 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
-import { ChipsField } from "@/components/questionnaire/fields/ChipsField";
+import { PillMultiSelectField } from "@/components/questionnaire/fields/PillMultiSelectField";
+import type { Question } from "@/content/questionnaire";
 import type { Questionario } from "@/lib/schema";
 
 type SupportsValue = NonNullable<Questionario["supportiEVincoli"]>;
 
 interface SupportsFieldProps {
+  options: NonNullable<Question["options"]>;
   value: SupportsValue;
   onChange: (value: SupportsValue) => void;
 }
 
-const suggestions = [
-  "Sito web",
-  "Social media",
-  "Packaging",
-  "Insegna negozio",
-  "Divise/uniformi",
-  "Stampa (biglietti, flyer)",
-];
-
-export function SupportsField({ value, onChange }: SupportsFieldProps) {
+export function SupportsField({ options, value, onChange }: SupportsFieldProps) {
   return (
     <div className="flex flex-col gap-6">
-      <ChipsField
-        values={value.supporti}
-        onChange={(supporti) => onChange({ ...value, supporti })}
-        placeholder="Aggiungi un supporto e premi Invio"
-        suggestions={suggestions}
+      <PillMultiSelectField
+        options={options}
+        values={value.supporti.selezionati}
+        onChange={(selezionati) =>
+          onChange({ ...value, supporti: { ...value.supporti, selezionati } })
+        }
+      />
+      <Textarea
+        value={value.supporti.altro ?? ""}
+        onChange={(e) =>
+          onChange({ ...value, supporti: { ...value.supporti, altro: e.target.value } })
+        }
+        placeholder="Altro supporto non in lista (facoltativo)"
+        rows={2}
+        className="resize-none border-0 border-b-2 border-neutral-200 rounded-none px-1 focus-visible:ring-0 focus-visible:border-accent-400"
       />
       <Textarea
         value={value.vincoliTecnici ?? ""}

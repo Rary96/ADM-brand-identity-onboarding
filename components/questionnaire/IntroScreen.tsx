@@ -26,12 +26,22 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
       <p className="text-sm font-medium text-accent-600">
         Tempo stimato: {introCopy.tempoStimato}
       </p>
+      <ul className="flex flex-col gap-2 text-left text-sm text-neutral-500">
+        {introCopy.punti.map((punto) => (
+          <li key={punto} className="flex gap-2.5">
+            <span className="mt-0.5 text-accent-500" aria-hidden="true">
+              —
+            </span>
+            <span>{punto}</span>
+          </li>
+        ))}
+      </ul>
       <button
         type="button"
         onClick={onStart}
         className="mx-auto flex items-center gap-2 rounded-full bg-accent-300 px-6 py-3 text-base font-semibold text-neutral-900 transition-colors hover:bg-accent-400 sm:mx-0"
       >
-        Inizia
+        {introCopy.bottone}
         <ArrowRight className="h-4 w-4" />
       </button>
       <p className="text-sm text-neutral-400">
