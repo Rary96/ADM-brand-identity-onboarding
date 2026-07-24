@@ -47,6 +47,29 @@ delle decisioni, delle deviazioni dal piano originale e del perché in
 - Obbligatorie solo le 7 domande davvero strategiche, come raccomandato nel brief: nome azienda, email, storia/feedback attuale, valori, USP, cliente ideale, competitor. Tutto il resto è facoltativo.
 - Aggiunta la domanda di branching nuovo brand/restyling con relativa domanda di feedback sull'identità esistente per il caso restyling (mancava nel brief).
 
+### Revisione domande e copy (2026-07-24)
+
+Dopo il primo periodo in produzione, revisione mirata di domande e copy — vedi
+`doc/PROGRESS.md` (Log 2026-07-24) per il dettaglio completo:
+
+- `aziendaReferente` splittato in `nomeAzienda` + `referente` (necessario per
+  personalizzare il copy col nome azienda e correggere il saluto nell'email
+  di conferma, prima rotto).
+- 4 domande in più rispetto alla versione iniziale (35 per i nuovi brand, 34
+  per i restyling): domanda di follow-up sull'archetipo (`archetipoMotivazione`,
+  già nello schema ma mancante dal contenuto), stato del naming per i nuovi
+  brand, decisore finale, necessità di payoff/tagline. Le 7 domande
+  strategiche obbligatorie restano invariate nella sostanza.
+- `supportiEVincoli.supporti` e `formatiRichiesti` convertiti da chip a testo
+  libero a multi-select chiuso + "altro": a differenza di `valori`/
+  `canaliVendita` (che restano chip liberi, specifici per ogni azienda),
+  supporti d'uso e formati file sono enumerabili in modo pressoché
+  universale in un progetto di identità.
+- Tono di voce rivisto (il brand del cliente al centro del copy, non
+  Arianna in prima persona) e personalizzazione: i testi di sezione e i
+  reminder riprendono il nome azienda inserito in Sezione 1 (token
+  `{{azienda}}`, vedi `lib/personalize.ts`).
+
 ## Struttura progetto (Next.js App Router)
 
 ```

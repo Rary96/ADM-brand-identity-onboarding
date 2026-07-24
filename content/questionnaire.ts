@@ -5,6 +5,12 @@
  * Ogni domanda ha: id (mappa 1:1 con un campo dello schema), label, guida
  * (sottotesto/placeholder), obbligatorietà "di contenuto" (badge in UI) e,
  * dove serve, `visibleIf` per il branching nuovo brand / restyling.
+ *
+ * Tono di voce (rivisto il 2026-07-24): il brand del cliente resta sempre al
+ * centro del copy — non Arianna in prima persona. I testi di sezione (`intro`)
+ * e `midFormReminder`/`outroCopy` possono contenere il token `{{azienda}}`,
+ * interpolato a runtime col valore di `nomeAzienda` (vedi lib/personalize.ts) —
+ * usato "ogni tanto", non su ogni domanda, per non diventare ripetitivo.
  */
 
 export type FieldType =
@@ -41,25 +47,38 @@ export const introCopy = {
   sottotitolo:
     "Un questionario per costruire un'identità visiva che ti rappresenti davvero.",
   tempoStimato: "10-15 minuti",
+  punti: [
+    "Ogni risposta diventa materiale di lavoro: guida colori, font, forme — non è un modulo burocratico.",
+    "Le domande facoltative puoi saltarle: quello che non definisci ora lo definiamo insieme in call.",
+    "A form completato il prossimo passo tocca a me: ti ricontatto entro 1-2 giorni lavorativi per la call di kickoff.",
+  ],
+  bottone: "Diamo forma al tuo brand",
   nota:
-    "Le risposte facoltative puoi lasciarle in bianco: quello che non sai ora lo definiamo insieme in call. I tuoi dati sono trattati nel rispetto del GDPR.",
+    "I tuoi dati sono trattati nel rispetto del GDPR.",
 };
 
 export const midFormReminder =
-  "Sei a metà: altri 5-7 minuti e hai finito. Le risposte facoltative puoi saltarle.";
+  "Sei a metà, {{azienda}}: altri 5-7 minuti e hai finito. Le risposte facoltative puoi saltarle.";
 
 export const sections: Section[] = [
   {
     id: "anagrafica",
     title: "Anagrafica e contatti",
-    intro: "Dati minimi per gestire il progetto.",
+    intro: "Le basi, per non perderci nulla.",
     questions: [
       {
-        id: "aziendaReferente",
-        label: "Nome azienda/progetto e referente per il progetto",
-        guida: "Es. 'Studio Rossi Srl — referente: Marco Rossi, titolare'.",
+        id: "nomeAzienda",
+        label: "Come si chiama la tua azienda o il tuo progetto?",
+        guida: "Il nome che vuoi vedere sul logo — se è ancora provvisorio va bene lo stesso.",
         type: "text-short",
         required: true,
+      },
+      {
+        id: "referente",
+        label: "Chi sei? Nome e ruolo di chi segue il progetto",
+        guida: "Es. 'Marco Rossi, titolare' — così so con chi parlo in call.",
+        type: "text-short",
+        required: false,
       },
       {
         id: "email",
@@ -86,7 +105,7 @@ export const sections: Section[] = [
   {
     id: "storia-vision-valori",
     title: "Storia, Vision e Valori",
-    intro: "Il cuore strategico del progetto.",
+    intro: "Il cuore strategico di {{azienda}}.",
     questions: [
       {
         id: "tipoProgetto",
@@ -105,6 +124,19 @@ export const sections: Section[] = [
         type: "text-long",
         required: true,
         visibleIf: { field: "tipoProgetto", equals: "nuovo_brand" },
+      },
+      {
+        id: "namingStatus",
+        label: "Il nome che userai è già definitivo?",
+        guida: "Utile saperlo prima di disegnare un logotipo attorno a un nome che potrebbe cambiare.",
+        type: "single-choice",
+        required: false,
+        visibleIf: { field: "tipoProgetto", equals: "nuovo_brand" },
+        options: [
+          { value: "definitivo", label: "Sì, dominio e disponibilità già verificati" },
+          { value: "da_validare", label: "Ancora da validare (dominio/marchio)" },
+          { value: "da_decidere_insieme", label: "Da decidere insieme in call" },
+        ],
       },
       {
         id: "feedbackAttuale",
@@ -140,7 +172,7 @@ export const sections: Section[] = [
   {
     id: "prodotto-business",
     title: "Prodotto/Servizio e Modello di Business",
-    intro: "Cosa vendete davvero, e a che livello di prezzo.",
+    intro: "Cosa vende davvero {{azienda}}, e a che livello di prezzo.",
     questions: [
       {
         id: "uspVendita",
@@ -152,7 +184,7 @@ export const sections: Section[] = [
       {
         id: "posizionamentoPrezzo",
         label: "In quale fascia di prezzo/posizionamento vi collocate?",
-        guida: "Pensa a un brand percepito come 'fratello maggiore' del tuo: in che fascia lo collocheresti?",
+        guida: "Se hai dubbi, pensa a un concorrente che percepisci più costoso di te: tu dove ti collochi rispetto a lui?",
         type: "scale",
         required: false,
         options: [
@@ -174,7 +206,7 @@ export const sections: Section[] = [
   {
     id: "target",
     title: "Target Audience e Buyer Persona",
-    intro: "A chi parla davvero il tuo brand.",
+    intro: "A chi parla davvero il brand di {{azienda}}.",
     questions: [
       {
         id: "clienteIdeale",
@@ -210,7 +242,7 @@ export const sections: Section[] = [
   {
     id: "competitor",
     title: "Competitor e Posizionamento",
-    intro: "Per garantire un'identità davvero differenziata, non simile per caso.",
+    intro: "Per garantire a {{azienda}} un'identità davvero differenziata, non simile per caso.",
     questions: [
       {
         id: "competitor",
@@ -238,7 +270,7 @@ export const sections: Section[] = [
   {
     id: "personalita-tone-of-voice",
     title: "Personalità del brand e Tone of Voice",
-    intro: "Il ponte tra strategia e scelte visive.",
+    intro: "Il ponte tra la strategia di {{azienda}} e le scelte visive.",
     questions: [
       {
         id: "archetipo",
@@ -262,6 +294,13 @@ export const sections: Section[] = [
         ],
       },
       {
+        id: "archetipoMotivazione",
+        label: "Perché senti che questo archetipo ti rappresenta?",
+        guida: "Facoltativo, ma anche una riga aiuta a orientare il tono visivo del logo.",
+        type: "text-long",
+        required: false,
+      },
+      {
         id: "toneEParole",
         label: "Come parlate ai clienti — e ci sono parole che usereste sempre o mai?",
         guida: "Pensa a una mail tipo che scrivereste a un cliente: che tono ha? Anche 2-3 parole per lato bastano.",
@@ -273,7 +312,7 @@ export const sections: Section[] = [
   {
     id: "estetica-stile",
     title: "Preferenze Estetiche e Stile Visivo",
-    intro: "Riferimenti concreti, non aggettivi astratti.",
+    intro: "Riferimenti concreti per {{azienda}}, non aggettivi astratti.",
     questions: [
       {
         id: "loghiRiferimento",
@@ -316,7 +355,7 @@ export const sections: Section[] = [
   {
     id: "asset-vincoli",
     title: "Asset Esistenti e Vincoli Tecnici",
-    intro: "Per non ripartire da zero quando non serve.",
+    intro: "Per non far ripartire {{azienda}} da zero quando non serve.",
     questions: [
       {
         id: "assetEsistenti",
@@ -332,13 +371,23 @@ export const sections: Section[] = [
         guida: "Seleziona anche usi futuri previsti nei prossimi 1-2 anni. In caso di dubbio su normative, allega il regolamento.",
         type: "multi-choice",
         required: false,
+        options: [
+          { value: "sito_web", label: "Sito web" },
+          { value: "social_media", label: "Social media" },
+          { value: "packaging", label: "Packaging" },
+          { value: "insegna_negozio", label: "Insegna negozio" },
+          { value: "divise_uniformi", label: "Divise/uniformi" },
+          { value: "stampa", label: "Stampa (biglietti, flyer, brochure)" },
+          { value: "cancelleria", label: "Cancelleria (carta intestata, buste)" },
+          { value: "veicoli", label: "Veicoli aziendali" },
+        ],
       },
     ],
   },
   {
     id: "deliverable-budget",
     title: "Deliverable, Tempistiche e Budget",
-    intro: "Per allineare aspettative fin da subito.",
+    intro: "Per allineare le aspettative di {{azienda}} fin da subito.",
     questions: [
       {
         id: "formatiRichiesti",
@@ -346,6 +395,28 @@ export const sections: Section[] = [
         guida: "Se non sai cosa ti serve tecnicamente, seleziona 'pacchetto completo consigliato dal designer'.",
         type: "multi-choice",
         required: false,
+        options: [
+          { value: "vettoriale", label: "AI/EPS vettoriale" },
+          { value: "png_trasparente", label: "PNG trasparente alta risoluzione" },
+          { value: "pdf_stampa", label: "PDF stampa" },
+          { value: "favicon", label: "Favicon/icona app" },
+          { value: "firma_email", label: "Firma email" },
+          { value: "brand_guidelines", label: "Brand guidelines (PDF)" },
+          { value: "template_social", label: "Template social media" },
+          { value: "pacchetto_completo", label: "Pacchetto completo consigliato dal designer" },
+        ],
+      },
+      {
+        id: "payoffTagline",
+        label: "Ti serve anche un payoff/tagline sotto il logo?",
+        guida: "Es. 'Just do it' sotto Nike. Se non sai ancora rispondere, nessun problema.",
+        type: "single-choice",
+        required: false,
+        options: [
+          { value: "si", label: "Sì" },
+          { value: "no", label: "No, solo il logo" },
+          { value: "non_so", label: "Non so, ne parliamo in call" },
+        ],
       },
       {
         id: "scadenza",
@@ -368,6 +439,18 @@ export const sections: Section[] = [
         ],
       },
       {
+        id: "decisorFinale",
+        label: "Chi darà l'ok finale sul lavoro?",
+        guida: "Aiuta a evitare revisioni dell'ultimo minuto per un parere che non avevamo sentito prima.",
+        type: "single-choice",
+        required: false,
+        options: [
+          { value: "solo_io", label: "Solo io" },
+          { value: "io_piu_team", label: "Io, ma sento anche un socio/team" },
+          { value: "comitato", label: "Più persone devono essere d'accordo" },
+        ],
+      },
+      {
         id: "domandaJolly",
         label: "C'è altro che vorresti dirci e che non abbiamo chiesto?",
         type: "text-long",
@@ -378,8 +461,8 @@ export const sections: Section[] = [
 ];
 
 export const outroCopy = {
-  titolo: "Fatto — grazie!",
-  corpo: "Ho ricevuto le tue risposte, grazie per il tempo che ci hai dedicato.",
+  titolo: "Fatto — grazie, {{azienda}}!",
+  corpo: "Ho ricevuto le risposte su {{azienda}}, grazie per il tempo che ci hai dedicato.",
   // Usato solo nell'email di conferma cliente (ClientConfirmationEmail),
   // non nella OutroScreen a video — dettaglio dei prossimi passi dopo l'invio.
   prossimiPassi: [

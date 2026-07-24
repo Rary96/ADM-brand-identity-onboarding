@@ -18,14 +18,13 @@ import { UploadLinkField } from "@/components/questionnaire/fields/UploadLinkFie
 import { ColorField } from "@/components/questionnaire/fields/ColorField";
 import { SupportsField } from "@/components/questionnaire/fields/SupportsField";
 import { DeadlineField } from "@/components/questionnaire/fields/DeadlineField";
+import { Textarea } from "@/components/ui/textarea";
 
 interface FieldRendererProps {
   question: StepQuestion;
   value: unknown;
   onChange: (value: unknown) => void;
 }
-
-const formatiSuggestions = ["AI/EPS vettoriale", "PNG trasparente", "PDF", "Favicon", "Firma email"];
 
 export function FieldRenderer({ question, value, onChange }: FieldRendererProps) {
   switch (question.id) {
@@ -87,18 +86,32 @@ export function FieldRenderer({ question, value, onChange }: FieldRendererProps)
       return <ColorField value={v} onChange={onChange} />;
     }
     case "supportiEVincoli": {
-      const v = (value as Questionario["supportiEVincoli"]) ?? { supporti: [], vincoliTecnici: "" };
-      return <SupportsField value={v} onChange={onChange} />;
+      const v = (value as Questionario["supportiEVincoli"]) ?? {
+        supporti: { selezionati: [], altro: "" },
+        vincoliTecnici: "",
+      };
+      return <SupportsField options={question.options ?? []} value={v} onChange={onChange} />;
     }
     case "formatiRichiesti": {
-      const v = (value as string[] | undefined) ?? [];
+      const v = (value as { selezionati: string[]; altro?: string } | undefined) ?? {
+        selezionati: [],
+        altro: "",
+      };
       return (
-        <ChipsField
-          values={v}
-          onChange={onChange}
-          placeholder="Aggiungi un formato e premi Invio"
-          suggestions={formatiSuggestions}
-        />
+        <div className="flex flex-col gap-6">
+          <PillMultiSelectField
+            options={question.options ?? []}
+            values={v.selezionati}
+            onChange={(selezionati) => onChange({ ...v, selezionati })}
+          />
+          <Textarea
+            value={v.altro ?? ""}
+            onChange={(e) => onChange({ ...v, altro: e.target.value })}
+            placeholder="Altro formato non in lista (facoltativo)"
+            rows={2}
+            className="resize-none border-0 border-b-2 border-neutral-200 rounded-none px-1 text-base focus-visible:ring-0 focus-visible:border-accent-400"
+          />
+        </div>
       );
     }
     case "scadenza": {

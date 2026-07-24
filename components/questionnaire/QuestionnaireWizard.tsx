@@ -6,6 +6,7 @@ import { questionarioSchema, type Questionario } from "@/lib/schema";
 import { buildSteps } from "@/lib/questionnaire-steps";
 import { validateStep } from "@/lib/validate-step";
 import { midFormReminder } from "@/content/questionnaire";
+import { personalize } from "@/lib/personalize";
 import { ProgressBar } from "@/components/questionnaire/ProgressBar";
 import { IntroScreen } from "@/components/questionnaire/IntroScreen";
 import { OutroScreen } from "@/components/questionnaire/OutroScreen";
@@ -64,6 +65,7 @@ export function QuestionnaireWizard() {
     removeAttachment,
   };
 
+  const nomeAzienda = (answers.nomeAzienda as string | undefined) ?? "";
   const tipoProgetto = answers.tipoProgetto as Questionario["tipoProgetto"] | undefined;
   const steps = useMemo(() => buildSteps(tipoProgetto), [tipoProgetto]);
   const totalSteps = steps.length + 1; // + step di consenso
@@ -188,7 +190,7 @@ export function QuestionnaireWizard() {
             exit={{ opacity: 0, y: -12 }}
             className="fixed left-1/2 top-6 z-30 max-w-[calc(100%-2rem)] -translate-x-1/2 text-balance rounded-full bg-accent-100 px-4 py-2 text-center text-sm font-medium text-accent-700 shadow-sm sm:max-w-sm"
           >
-            {midFormReminder}
+            {personalize(midFormReminder, nomeAzienda)}
           </motion.div>
         )}
       </AnimatePresence>
@@ -212,6 +214,7 @@ export function QuestionnaireWizard() {
               canGoBack
               error={error}
               autoAdvance={question.type === "single-choice"}
+              nomeAzienda={nomeAzienda}
             />
           )}
 
@@ -230,7 +233,7 @@ export function QuestionnaireWizard() {
             />
           )}
 
-          {phase === "outro" && <OutroScreen key="outro" />}
+          {phase === "outro" && <OutroScreen key="outro" nomeAzienda={nomeAzienda} />}
         </AnimatePresence>
       </div>
     </div>

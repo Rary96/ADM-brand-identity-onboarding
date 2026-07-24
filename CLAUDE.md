@@ -79,11 +79,26 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   app non verificate — rischio operativo per un invio automatico senza
   manutenzione). App Password: nessun dominio da verificare, invia a qualsiasi
   destinatario da subito. Vedi `lib/mailer.tsx`.
-- **Contenuto del questionario**: 24 domande su 9 sezioni (una per pagina), solo 7
-  obbligatorie a livello strategico (nome azienda, email, storia/feedback attuale,
-  valori, USP, cliente ideale, competitor). Tutto il resto è facoltativo per ridurre
-  l'abbandono. Vedi `README.md` per il dettaglio delle ottimizzazioni rispetto al
-  brief originale.
+- **Contenuto del questionario**: 35 domande per i nuovi brand (34 per i
+  restyling) su 9 sezioni (una per pagina), solo 7 obbligatorie a livello
+  strategico (`nomeAzienda`, email, storia/feedback attuale, valori, USP,
+  cliente ideale, competitor). Tutto il resto è facoltativo per ridurre
+  l'abbandono. Vedi `README.md` per il dettaglio delle ottimizzazioni rispetto
+  al brief originale e la revisione domande/copy del 2026-07-24.
+- **`aziendaReferente` splittato in `nomeAzienda` + `referente`** (2026-07-24):
+  il campo combinato impediva sia la personalizzazione del copy col nome
+  azienda sia un saluto corretto nell'email di conferma cliente. `nomeAzienda`
+  (obbligatorio) prende il posto del vecchio campo nell'elenco delle 7 domande
+  strategiche; `referente` è facoltativo. Non tornare al campo unico.
+- **Tono di voce e personalizzazione** (2026-07-24): il copy tiene il brand
+  del cliente al centro (non Arianna in prima persona) — vedi
+  `content/questionnaire.ts` (`introCopy.bottone`, sezioni). I testi di
+  sezione, `midFormReminder` e `outroCopy` possono contenere il token
+  `{{azienda}}`, interpolato col nome azienda inserito in Sezione 1 tramite
+  `lib/personalize.ts` — usato "ogni tanto" (non su ogni singola domanda,
+  per non diventare ripetitivo). Le stesse stringhe personalizzate di
+  `outroCopy` sono riusate in `emails/ClientConfirmationEmail.tsx`, così UI
+  ed email restano sempre allineate.
 - **Tempo stimato di compilazione**: 10-15 minuti, indicato in apertura e ripetuto a
   metà form come rinforzo (vedi `content/questionnaire.ts`: `introCopy`,
   `midFormReminder`).
@@ -93,11 +108,18 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   `tailwind.config.ts`/`design-tokens.ts` già decisi. Usato `shadcn@2.3.0`
   (Radix + `tailwind.config.ts` classico) — non fare l'upgrade senza discuterne,
   richiederebbe riscrivere la palette in CSS vars/oklch.
-- **Campi array liberi senza opzioni predefinite** (`valori`, `canaliVendita`,
-  `supportiEVincoli.supporti`, `formatiRichiesti`): lo schema li tipizza come
-  `z.array(z.string())` senza enum, quindi in UI sono chip-input a testo libero
-  (`ChipsField`), non checkbox con lista fissa — coerente con lo schema, non
-  inventare una tassonomia di opzioni senza chiederlo.
+- **Campi array liberi senza opzioni predefinite** (`valori`, `canaliVendita`):
+  lo schema li tipizza come `z.array(z.string())` senza enum, quindi in UI
+  sono chip-input a testo libero (`ChipsField`), non checkbox con lista
+  fissa — intrinsecamente specifici di ogni azienda, non inventare una
+  tassonomia di opzioni senza chiederlo.
+- **`supportiEVincoli.supporti` e `formatiRichiesti`: multi-select chiuso +
+  "altro"** (`{ selezionati: string[], altro?: string }`, `PillMultiSelectField`
+  + `Textarea` — non più chip liberi). Deciso il 2026-07-24, a differenza del
+  punto sopra: supporti d'uso del logo e formati file alla consegna sono
+  enumerabili in modo pressoché universale in un progetto di identità, le
+  opzioni sono in `content/questionnaire.ts` sull'oggetto `Question.options`
+  di ciascuna domanda. Non tornare a chip liberi senza motivo.
 - **Allegati email vs prop-drilling**: lo stato degli allegati (chi ha allegato
   cosa, tetto globale) vive in `AttachmentsContext` (React Context), non passato
   come prop attraverso `QuestionCard`/`FieldRenderer` — quei due restano
@@ -151,7 +173,8 @@ onboarding-brand-identity/
 │   ├── google-sheets.ts           # scrittura riga su Sheets
 │   ├── mailer.tsx                  # invio email via Nodemailer/Gmail SMTP
 │   ├── email-sections.ts            # riepilogo email da content/questionnaire.ts
-│   └── questionnaire-labels.ts       # enum → label italiane (condiviso Sheets/email)
+│   ├── questionnaire-labels.ts       # enum → label italiane (condiviso Sheets/email)
+│   └── personalize.ts                 # interpolazione {{azienda}} nei testi di copy
 ├── emails/                     # template React Email (riepilogo interno, conferma cliente)
 ├── content/
 │   └── questionnaire.ts       # Copy IT: sezioni, domande, guida cliente, placeholder

@@ -17,12 +17,12 @@ export function InternalSummaryEmail({ data, submissionId }: InternalSummaryEmai
   const budgetLabel = getOptionLabel("budget", data.budget);
 
   return (
-    <EmailLayout preview={`Nuova submission — ${data.aziendaReferente}`}>
+    <EmailLayout preview={`Nuova submission — ${data.nomeAzienda}`}>
       <Heading as="h2" style={{ fontSize: 20, color: colors.neutral[900], margin: "0 0 4px" }}>
-        Nuova risposta al questionario
+        Nuova risposta al questionario — {data.nomeAzienda}
       </Heading>
-      <Text style={{ fontSize: 13, color: colors.neutral[400], margin: "0 0 20px" }}>
-        ID submission {submissionId}
+      <Text style={{ fontSize: 13, color: colors.neutral[400], margin: "0 0 24px" }}>
+        {data.referente ? `${data.referente} — ` : ""}ID submission {submissionId}
       </Text>
 
       <Section
@@ -35,7 +35,8 @@ export function InternalSummaryEmail({ data, submissionId }: InternalSummaryEmai
         }}
       >
         <Text style={{ fontSize: 15, fontWeight: 700, color: colors.neutral[900], margin: "0 0 8px" }}>
-          {data.aziendaReferente}
+          {data.nomeAzienda}
+          {data.referente ? ` — ${data.referente}` : ""}
         </Text>
         <Text style={{ fontSize: 13, lineHeight: 1.7, color: colors.neutral[700], margin: 0 }}>
           {data.email}

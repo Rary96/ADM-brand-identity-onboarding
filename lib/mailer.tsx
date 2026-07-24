@@ -43,7 +43,7 @@ export async function sendInternalSummaryEmail(
   await transport.sendMail({
     from: `Onboarding Brand Identity <${process.env.GMAIL_USER}>`,
     to: INTERNAL_RECIPIENT,
-    subject: `Nuova submission — ${data.aziendaReferente}`,
+    subject: `Nuova submission — ${data.nomeAzienda}`,
     html,
     attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })),
   });
@@ -51,7 +51,9 @@ export async function sendInternalSummaryEmail(
 
 export async function sendClientConfirmationEmail(data: Questionario) {
   const transport = getTransport();
-  const html = await render(<ClientConfirmationEmail />);
+  const html = await render(
+    <ClientConfirmationEmail nomeAzienda={data.nomeAzienda} referente={data.referente} />
+  );
   await transport.sendMail({
     from: `Arianna Dal Monte | ADM Design & Digital <${process.env.GMAIL_USER}>`,
     to: data.email,
