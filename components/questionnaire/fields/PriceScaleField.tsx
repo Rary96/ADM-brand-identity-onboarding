@@ -21,7 +21,7 @@ export function PriceScaleField({ options, value, onChange }: PriceScaleProps) {
               type="button"
               onClick={() => onChange(opt.value)}
               className={cn(
-                "flex-1 border-r border-neutral-200 px-2 py-4 text-sm font-medium transition-colors last:border-r-0",
+                "flex-1 border-r border-neutral-200 px-1 py-3.5 text-xs font-medium transition-colors last:border-r-0 sm:px-2 sm:py-4 sm:text-sm",
                 selected
                   ? "bg-accent-300 text-neutral-900"
                   : "bg-white text-neutral-500 hover:bg-accent-50"

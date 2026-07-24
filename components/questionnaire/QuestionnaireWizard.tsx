@@ -177,7 +177,7 @@ export function QuestionnaireWizard() {
 
   return (
     <AttachmentsContext.Provider value={attachmentsContextValue}>
-    <div className="flex min-h-screen flex-col items-center bg-white px-6 py-24">
+    <div className="flex min-h-dvh flex-col items-center bg-white px-5 py-10 sm:px-6 sm:py-16 lg:py-24">
       {phase !== "intro" && <ProgressBar progress={progress} />}
 
       <AnimatePresence>
@@ -186,7 +186,7 @@ export function QuestionnaireWizard() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="fixed left-1/2 top-6 z-30 -translate-x-1/2 rounded-full bg-accent-100 px-4 py-2 text-sm font-medium text-accent-700 shadow-sm"
+            className="fixed left-1/2 top-6 z-30 max-w-[calc(100%-2rem)] -translate-x-1/2 text-balance rounded-full bg-accent-100 px-4 py-2 text-center text-sm font-medium text-accent-700 shadow-sm sm:max-w-sm"
           >
             {midFormReminder}
           </motion.div>

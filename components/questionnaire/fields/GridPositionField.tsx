@@ -27,12 +27,12 @@ export function GridPositionField({ value, onChange }: GridPositionFieldProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-center text-sm text-neutral-500">Seriosa</div>
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-neutral-500">Classico</span>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <span className="shrink-0 text-xs text-neutral-500 sm:text-sm">Classico</span>
         <div
           ref={containerRef}
           onClick={(e) => setFromClientPoint(e.clientX, e.clientY)}
-          className="relative aspect-square w-full max-w-sm cursor-crosshair rounded-lg border border-neutral-200 bg-[linear-gradient(to_right,theme(colors.neutral.100)_1px,transparent_1px),linear-gradient(to_bottom,theme(colors.neutral.100)_1px,transparent_1px)] bg-[size:20%_20%]"
+          className="relative aspect-square w-full min-w-0 max-w-sm cursor-crosshair touch-none rounded-lg border border-neutral-200 bg-[linear-gradient(to_right,theme(colors.neutral.100)_1px,transparent_1px),linear-gradient(to_bottom,theme(colors.neutral.100)_1px,transparent_1px)] bg-[size:20%_20%]"
         >
           <div className="absolute left-1/2 top-0 h-full w-px bg-neutral-200" />
           <div className="absolute left-0 top-1/2 h-px w-full bg-neutral-200" />
@@ -47,10 +47,12 @@ export function GridPositionField({ value, onChange }: GridPositionFieldProps) {
               top: `${current.seriosaGiocosa}%`,
             }}
             transition={{ duration: 0.15 }}
-            className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-accent-400 bg-accent-300 shadow-sm"
-          />
+            className="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center"
+          >
+            <span className="h-5 w-5 rounded-full border-2 border-accent-400 bg-accent-300 shadow-sm" />
+          </motion.div>
         </div>
-        <span className="text-sm text-neutral-500">Innovativo</span>
+        <span className="shrink-0 text-xs text-neutral-500 sm:text-sm">Innovativo</span>
       </div>
       <div className="flex justify-center text-sm text-neutral-500">Giocosa</div>
     </div>
