@@ -5,6 +5,12 @@ import { ClientConfirmationEmail } from "@/emails/ClientConfirmationEmail";
 import type { Questionario } from "@/lib/schema";
 import type { ParsedAttachment } from "@/lib/attachment-limits";
 
+// Email del proprietario/mittente di QUESTO progetto (uso personale
+// dell'utente) — fissa qui perché è il contesto per cui questo form è
+// stato costruito, non un valore generico del pattern. In un altro progetto
+// varierebbe: se dovesse servire renderla configurabile senza toccare il
+// codice, spostarla in una env var (es. INTERNAL_RECIPIENT_EMAIL, con
+// fallback a GMAIL_USER se non impostata) invece di un nuovo hardcode.
 const INTERNAL_RECIPIENT = "dalmontearianna.96@gmail.com";
 
 export type MailAttachment = ParsedAttachment;
@@ -45,7 +51,7 @@ export async function sendInternalSummaryEmail(
 
 export async function sendClientConfirmationEmail(data: Questionario) {
   const transport = getTransport();
-  const html = await render(<ClientConfirmationEmail aziendaReferente={data.aziendaReferente} />);
+  const html = await render(<ClientConfirmationEmail />);
   await transport.sendMail({
     from: `Arianna Dal Monte | ADM Design & Digital <${process.env.GMAIL_USER}>`,
     to: data.email,

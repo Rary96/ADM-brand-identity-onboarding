@@ -379,6 +379,12 @@ export const sections: Section[] = [
 
 export const outroCopy = {
   titolo: "Fatto — grazie!",
-  corpo:
-    "Ho ricevuto le tue risposte. Le uso per preparare la nostra call di kickoff: ti scrivo entro 1-2 giorni lavorativi per fissarla.",
+  corpo: "Ho ricevuto le tue risposte, grazie per il tempo che ci hai dedicato.",
+  // Usato solo nell'email di conferma cliente (ClientConfirmationEmail),
+  // non nella OutroScreen a video — dettaglio dei prossimi passi dopo l'invio.
+  prossimiPassi: [
+    "Rivedo con calma tutte le tue risposte.",
+    "Ti scrivo entro 1-2 giorni lavorativi per fissare la call di kickoff.",
+    "Nella call definiamo insieme le prossime tappe del progetto.",
+  ],
 };
