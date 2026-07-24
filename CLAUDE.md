@@ -71,7 +71,10 @@ Agisci da Senior Full-Stack Developer + Expert UX/UI Designer.
   testo restano neutri (bianco/grigi) per non influenzare le risposte estetiche del
   cliente, come fa Typeform. Vedi `lib/design-tokens.ts` per la palette completa.
 - **Notifiche email**: doppio invio a ogni submission —
-  1. riepilogo completo a `dalmontearianna.96@gmail.com`
+  1. riepilogo completo a `dalmontearianna.96@gmail.com` (email del
+     proprietario/mittente per QUESTO progetto — uso personale dell'utente,
+     non un valore generico: in altri progetti sarà un indirizzo diverso,
+     vedi `doc/ARCHITECTURE.md`)
   2. email di conferma/ringraziamento al cliente (indirizzo dal campo `email` del form)
   Invio via Nodemailer + SMTP Gmail (App Password su `dalmontearianna.96@gmail.com`),
   non Resend: valutato anche EmailJS (pensato per invio lato client, tier gratuito
@@ -188,23 +191,42 @@ vedi voce dedicata sopra in "Cosa è già stato deciso".
 
 ## Workflow post-deploy: issue tracking e branching
 
-Decisione presa il 2026-07-23, ora che il progetto è live in produzione:
+Decisione presa il 2026-07-23, ora che il progetto è live in produzione;
+regole di dettaglio formalizzate il 2026-07-24.
 
-- **Interventi futuri (revisioni, bug, nuove feature) si tracciano come GitHub
-  Issue** sul repo `Rary96/ADM-brand-identity-onboarding`, non solo a voce o in
-  `doc/PROGRESS.md`. `PROGRESS.md` resta il log narrativo del "perché" delle
-  decisioni già prese; le Issue sono la checklist operativa di cosa è ancora
-  da fare.
+- **Ogni problema rilevato (bug, revisione, nuova feature) si traccia come
+  GitHub Issue** sul repo `Rary96/ADM-brand-identity-onboarding`, non solo a
+  voce o in `doc/PROGRESS.md`. `PROGRESS.md` resta il log narrativo del
+  "perché" delle decisioni già prese; le Issue sono la checklist operativa di
+  cosa è ancora da fare.
+- **Ogni Issue va etichettata con la categoria pertinente**: `UI`
+  (interfaccia visiva: stile, layout, componenti), `UX` (flusso, contenuto,
+  interazione) o `BACK` (struttura tecnica, sviluppo, backend) — combinabili
+  se il problema attraversa più aree (es. `UX`+`UI` per copy/UI email, issue
+  #3). Aggiungere anche le label di default GitHub quando pertinenti
+  (`bug`, `documentation`, `enhancement`, ecc.).
 - **Ogni intervento non banale si sviluppa su un branch dedicato**, merge in
   `main` solo a lavoro completato/testato — non più commit diretti su `main`
   come nella fase di sviluppo iniziale. Motivo: `main` è collegato al deploy
   automatico su Vercel (push → redeploy in produzione), quindi un push diretto
   di una modifica a metà (es. un restyling parziale) romperebbe il sito live.
-- Issue aperte alla data di questa decisione (prima infornata di interventi
+- **Ad ogni commit/push sul branch di lavoro, verificare se risolve una o più
+  Issue aperte e, in caso affermativo, chiuderle subito** (non aspettare il
+  merge su `main`) con `gh issue close <N> --comment "..."`, citando sempre
+  l'hash del commit che ha risolto il problema nel commento di chiusura —
+  stesso schema già usato per le issue #2 e #5. Non usare la keyword
+  automatica GitHub (`Closes #N`) perché chiude solo al merge sul branch
+  default, mentre qui la chiusura deve avvenire già sul branch di lavoro.
+- Issue aperte alla data del 2026-07-23 (prima infornata di interventi
   segnalati dall'utente): revisione domande del questionario (forma e
-  contenuto), UX degli stati d'errore dei componenti, copy/UI delle email,
-  UI visiva generale, conversione responsive mobile, inserimento loghi brand
-  ADM. Vedi le Issue su GitHub per il dettaglio, non duplicarle qui.
+  contenuto), copy/UI delle email, UI visiva generale, inserimento loghi
+  brand ADM. Vedi le Issue su GitHub per il dettaglio, non duplicarle qui.
+- **`doc/ARCHITECTURE.md`**: riferimento generico e portabile (stack, pattern
+  ricorrenti, razionale delle decisioni tecniche) pensato per essere ripreso
+  come base in altri progetti simili (form di contatto, altri onboarding a
+  step) in contesti futuri — a differenza di `PROGRESS.md`, che resta il log
+  cronologico specifico di questo progetto. Tenerlo aggiornato quando una
+  decisione tecnica generalizzabile cambia.
 
 ## Variabili d'ambiente (impostate su Vercel, Production e Preview)
 

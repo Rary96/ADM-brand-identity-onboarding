@@ -516,3 +516,35 @@ tracking su GitHub + branch per gli interventi futuri.
   push diretto di una modifica a metà romperebbe il sito in produzione.
 - `CLAUDE.md` aggiornato con una nuova sezione "Workflow post-deploy: issue
   tracking e branching" che documenta entrambe le decisioni.
+
+**2026-07-24 — Claude Code** — Cambio font e rimozione scorciatoia Invio/Enter
+tra domande (commit diretto su `main`, intervento piccolo e a basso rischio).
+
+- Font sostituito da Inter a **Montserrat** (Google Fonts) — `app/layout.tsx`
+  e `lib/design-tokens.ts` (`fonts.sans`/`fonts.mono`).
+- Rimossa la navigazione da tastiera (Invio) tra una domanda e l'altra:
+  tolto l'hint "Premi Invio ↵" e l'`onKeyDown` che avanzava allo step
+  successivo su `text-short`/`email` (`QuestionCard.tsx`, `FieldRenderer.tsx`,
+  `SimpleFields.tsx`). Motivo: incoerenza con gli altri tipi di campo, dove
+  Invio ha altri usi (es. aggiungere un chip in `ChipsField`) o nessuno —
+  la navigazione ora passa solo dal bottone "Avanti" per tutti i campi.
+- `CLAUDE.md` aggiornato con la nuova voce in "Cosa è già stato deciso".
+
+**2026-07-24 — Claude Code** — Fix responsive mobile (branch
+`fix/responsive-mobile`), chiude l'Issue #5.
+
+- `min-h-screen` → `min-h-dvh` su `QuestionnaireWizard.tsx`: evita i salti di
+  layout causati dalla barra indirizzi dinamica di Safari iOS (`100vh` non è
+  affidabile su mobile).
+- Padding verticale del wizard responsive (ridotto su schermi piccoli, non
+  più il fisso `py-24` che sprecava spazio su mobile).
+- Toast del promemoria a metà form vincolato con `max-width` e testo centrato:
+  prima poteva uscire dai bordi su telefoni stretti (320-375px).
+- `GridPositionField.tsx` (manopola della mappa di posizionamento 2D): area
+  di tocco ampliata da 20px a 44px (soglia standard di accessibilità touch) e
+  `touch-none` per evitare che il drag sulla manopola scrollasse la pagina
+  sotto il dito.
+- `PriceScaleField.tsx`: testo/padding ridotti su mobile per evitare che le 4
+  etichette della fascia di prezzo andassero a capo nella riga segmentata.
+- Nessuna modifica a schema/contenuti/logica — solo CSS/Tailwind e touch
+  target, coerente con lo scope dell'Issue #5.
