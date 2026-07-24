@@ -78,7 +78,7 @@ onboarding-brand-identity/
 ├── tailwind.config.ts
 ├── components.json          # config shadcn/ui
 ├── app/
-│   ├── layout.tsx           # font Inter, metadata
+│   ├── layout.tsx           # font Montserrat, metadata
 │   ├── page.tsx              # monta <QuestionnaireWizard />
 │   ├── globals.css            # tema shadcn (HSL vars) sopra la palette lilla/neutri
 │   ├── api/submit/route.ts    # valida (Zod), scrive su Sheets, invia le due email
@@ -117,4 +117,8 @@ onboarding-brand-identity/
 - [`doc/PROGRESS.md`](doc/PROGRESS.md) — log cronologico dettagliato: cosa è
   stato fatto in ogni fase, ogni deviazione dal piano originale con il perché
   (es. Resend → Nodemailer, Google Drive → allegati email, CookieYes non
-  integrato), utile anche come riferimento riusabile per progetti simili.
+  integrato), specifico di questo progetto.
+- [`doc/ARCHITECTURE.md`](doc/ARCHITECTURE.md) — riferimento generico e
+  portabile (stack, pattern ricorrenti, razionale delle scelte tecniche,
+  workflow issue/branch), pensato per essere ripreso come base in altri
+  progetti simili (form di contatto, altri onboarding a step).

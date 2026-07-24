@@ -517,6 +517,58 @@ tracking su GitHub + branch per gli interventi futuri.
 - `CLAUDE.md` aggiornato con una nuova sezione "Workflow post-deploy: issue
   tracking e branching" che documenta entrambe le decisioni.
 
+**2026-07-24 — Claude Code** — Cambio font e rimozione scorciatoia Invio/Enter
+tra domande (commit diretto su `main`, intervento piccolo e a basso rischio).
+
+- Font sostituito da Inter a **Montserrat** (Google Fonts) — `app/layout.tsx`
+  e `lib/design-tokens.ts` (`fonts.sans`/`fonts.mono`).
+- Rimossa la navigazione da tastiera (Invio) tra una domanda e l'altra:
+  tolto l'hint "Premi Invio ↵" e l'`onKeyDown` che avanzava allo step
+  successivo su `text-short`/`email` (`QuestionCard.tsx`, `FieldRenderer.tsx`,
+  `SimpleFields.tsx`). Motivo: incoerenza con gli altri tipi di campo, dove
+  Invio ha altri usi (es. aggiungere un chip in `ChipsField`) o nessuno —
+  la navigazione ora passa solo dal bottone "Avanti" per tutti i campi.
+- `CLAUDE.md` aggiornato con la nuova voce in "Cosa è già stato deciso".
+
+**2026-07-24 — Claude Code** — Fix responsive mobile (branch
+`fix/responsive-mobile`), chiude l'Issue #5.
+
+- `min-h-screen` → `min-h-dvh` su `QuestionnaireWizard.tsx`: evita i salti di
+  layout causati dalla barra indirizzi dinamica di Safari iOS (`100vh` non è
+  affidabile su mobile).
+- Padding verticale del wizard responsive (ridotto su schermi piccoli, non
+  più il fisso `py-24` che sprecava spazio su mobile).
+- Toast del promemoria a metà form vincolato con `max-width` e testo centrato:
+  prima poteva uscire dai bordi su telefoni stretti (320-375px).
+- `GridPositionField.tsx` (manopola della mappa di posizionamento 2D): area
+  di tocco ampliata da 20px a 44px (soglia standard di accessibilità touch) e
+  `touch-none` per evitare che il drag sulla manopola scrollasse la pagina
+  sotto il dito.
+- `PriceScaleField.tsx`: testo/padding ridotti su mobile per evitare che le 4
+  etichette della fascia di prezzo andassero a capo nella riga segmentata.
+- Nessuna modifica a schema/contenuti/logica — solo CSS/Tailwind e touch
+  target, coerente con lo scope dell'Issue #5.
+
+**2026-07-24 — Claude Code** — Copy e impaginazione email (branch
+`email-copy-ui-issue-3`), chiude l'Issue #3.
+
+- `InternalSummaryEmail.tsx`: aggiunta una card riassuntiva in cima
+  (azienda/referente, email, telefono/sito, tipo progetto, budget) prima del
+  dettaglio sezione per sezione, per una lettura rapida.
+- `ClientConfirmationEmail.tsx`: nuova sezione "Cosa succede adesso" con 3
+  step numerati (revisione risposte → contatto entro 1-2 giorni → call di
+  kickoff) — testi in `outroCopy.prossimiPassi`
+  (`content/questionnaire.ts`), usati solo qui, non nella `OutroScreen` a
+  video.
+- Fix: il saluto usava l'intero campo `aziendaReferente` (azienda e
+  referente combinati in un solo valore), risultando innaturale — reso
+  generico ("Ciao,") in questo intervento; sostituito dal saluto per nome
+  proprio nella revisione successiva (vedi voce seguente), che ha anche
+  risolto lo split del campo alla radice.
+- Testato con render locale di entrambe le email via `@react-email/render`
+  su dati di esempio; `tsc --noEmit` pulito. Invio reale in produzione
+  verificato manualmente dall'utente dopo il merge.
+
 **2026-07-24 — Claude Code** — Revisione domande e copy del questionario
 (Issue [#8](https://github.com/Rary96/ADM-brand-identity-onboarding/issues/8),
 branch `content/copy-tone-revision`).
@@ -592,3 +644,13 @@ branch `content/copy-tone-revision`).
   `formatiRichiesti.altro`, `payoffTagline`, `decisorFinale`) — Claude Code
   non ha modificato lo Sheet stesso, solo `lib/google-sheets.ts` che scrive
   le righe.
+**2026-07-24 — Claude Code** — Aggiunto `doc/ARCHITECTURE.md` (branch
+`docs/architecture-notes`).
+
+- Nuovo documento di riferimento tecnico generico e portabile (stack,
+  pattern ricorrenti, razionale delle decisioni), pensato per essere ripreso
+  come base in altri progetti simili (form di contatto, altri onboarding a
+  step) — a differenza di questo file, che resta il log cronologico
+  specifico di questo progetto.
+- `CLAUDE.md` e `README.md` aggiornati con riferimenti al nuovo documento
+  dove pertinente.
